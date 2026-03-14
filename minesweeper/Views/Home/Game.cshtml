@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Minesweeper";
+}
+
+@model Board
+
+<div id="board" class="d-grid">
+    <script src="/js/cell.js"></script>
+    @for (int c = 0; c < Model.Columns; c++)
+    {
+        <div class="row">
+            @for (int r = 0; r < Model.Rows; r++) 
+            {
+                Cell cell = Model.Cells[c][r];
+                <div>
+                    <button data-cell='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'
+                    onclick="onFieldClicked()">
+                        @(cell.IsBomb ? "💣" : cell.NeighboringBombs)
+                    </button>
+
+                </div>
+        
+                @* <partial name="Cell.cshtml" for="Cells[c][r]" data="Cells[c][r]">
+                </partial> *@
+            }
+         </div>
+    }
+</div>
+
+<div>
+    <button id="reset" class="btn btn-primary">Reset</button>
+</div>
