@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\ts\file.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.9.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+	<!--<ItemGroup>
+		<AvailableItemName Include="TypeScriptCompile" />
+	</ItemGroup>
+	<ItemGroup>
+		<TypeScriptCompile Include="$(ProjectDir)\**\*.ts" />
+	</ItemGroup>
+	<Target Name="BeforeBuild">
+		<Exec Command="&quot;$(PROGRAMFILES)\Microsoft SDKs\TypeScript\0.8.0.0\tsc&quot; -target ES5 @(TypeScriptCompile ->'&quot;%(fullpath)&quot;', ' ')" IgnoreExitCode="true" />
+	</Target>-->
+
+</Project>
