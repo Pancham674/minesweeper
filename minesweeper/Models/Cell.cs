@@ -1,5 +1,4 @@
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using System.Data.Common;
+using System.Text.Json.Serialization;
 
 public class Cell
 {
@@ -13,6 +12,7 @@ public class Cell
 		_isFlagged = false;
 
 		_neighbors = new Cell[3][];
+		_neighboringBombs = -1;
 	}
 
 	int _row;
@@ -24,7 +24,6 @@ public class Cell
 	bool _isFlagged;
 	bool _isBomb;
 	
-	HtmlTargetElementAttribute _htmlElement;
 
 	public int Row { get => _row; }
 	public int Column { get => _column;	}
@@ -42,19 +41,18 @@ public class Cell
 		set => _isFlagged = value;
 	}
 
-	//only fields that aren't bombs should have a number
+	/// <summary>
+	/// Is this cells number of bombs that are around it. Will be -1 if the cell itself is a bomb
+	/// </summary>
 	public int NeighboringBombs
 	{
 		get => _neighboringBombs;
+		
+		//only fields that aren't bombs should have a number
 		set => _neighboringBombs = _isBomb ? -1 : value;
 	}
 
-	public HtmlTargetElementAttribute Element
-	{
-		get => _htmlElement;
-		set => _htmlElement = value;
-	}
-
+	[JsonIgnore]
 	public Cell[][] Neighbors
 	{
 		get => _neighbors;

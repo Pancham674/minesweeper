@@ -1,23 +1,37 @@
-﻿//click event for clicking a cell
-document.addEventListener('click', function (e) {
-    const btn = e.target.closest('button[data-cell]');
+﻿document.querySelectorAll('#cell').forEach(cellHtml => {
+    const cellModel = JSON.parse(cellHtml.dataset.cell);
 
-    if (!btn) {
-        return;
-    }
+    cellHtml.addEventListener('click', () => {
+        cellHtml.dispatchEvent(new CustomEvent("onCellLeftClick", {
+            detail: { cellModel, cellHtml },
+            bubbles: true,
+            composed: true
+        }));
+    });
 
-    const cell = JSON.parse(btn.dataset.cell);
-    btn.innerHTML = cell.IsBomb ? "Y" : "N";
-    console.log("loc of cell on the grid is C" + cell.Column + ", R" + cell.Row);
+    cellHtml.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
 
-    cell.IsRevealed = true;
+        cellHtml.dispatchEvent(new CustomEvent('onCellRightClick', {
+            detail: { cellModel, cellHtml },
+            bubbles: true,
+            composed: true
+        }));
+    });
+
+    cellHtml.addEventListener('mouseenter', () => {
+        cellHtml.dispatchEvent(new CustomEvent('onCellHover', {
+            detail: { cellModel, cellHtml },
+            bubbles: true,
+            composed: true
+        }));
+    });
+
+    cellHtml.addEventListener('mouseleave', (e) => {
+        cellHtml.dispatchEvent(new CustomEvent('onCellHoverEnded', {
+            detail: { cellModel, cellHtml },
+            bubbles: true,
+            composed: true
+        }));
+    });
 });
-
-//add methods to change innerhtml
-//to a flag         (right click)
-//to a bomb         (clicked bomb)
-//to its number     (clicked non bomb)
-
-//also change cell attr
-function flagCell(cell) {
-}

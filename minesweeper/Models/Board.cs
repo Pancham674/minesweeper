@@ -13,8 +13,9 @@ public class Board
 
 	public Board()
 	{
-		_rows = 5;
-		_columns = 5;
+		Random rand = new Random();
+		_rows = rand.Next(5, 15);
+		_columns = rand.Next(5, 15);
 		_cells = new Cell[_columns][];
 		_bombCount = (int)Math.Round(_rows * _columns / 4f);
 
@@ -45,11 +46,14 @@ public class Board
 		SetCellNumber();
 	}
 
+	/// <summary>
+	/// Assigns all cells their numbers by checking the neigbors around the cell. Also adds a ref of them to cell.Neigbors for chording.
+	/// </summary>
 	void SetCellNumber()
 	{
 		foreach(Cell[] column in _cells)
 		{
-			foreach(Cell currentCell in column)
+			foreach (Cell currentCell in column)
 			{
 				//ignore bombs since they shouldnt have numbers
 				if (currentCell.IsBomb)
@@ -61,23 +65,23 @@ public class Board
 				int neighboringBombs = 0;
 				int colForNeighbors = 0;
 
-				//will check the rows between the current field (column-1 = upper field, column+1 = lower field)
-				for (int c = currentCell.Row - 1; c < currentCell.Row + 2; c++)
+				//will check the rows between the current field (row-1 = upper field, row+1 = lower field)
+				for (int c = currentCell.Column - 1; c < currentCell.Column+ 2; c++)
 				{
 					//prevent going outside of the board index
-					if (c < 0 || c > _rows - 1)
+					if (c < 0 || c > _columns - 1)
 					{
 						continue;
 					}
 
-					currentCell.Neighbors[colForNeighbors] = [];
+					currentCell.Neighbors[colForNeighbors] = new Cell[3];
 					int rowForNeighbors = 0;
 
 					//will check the columns beside the current field (col-1 = left field, col+1 = right field)
-					for (int r = currentCell.Column - 1; r < currentCell.Column + 2; r++)
+					for (int r = currentCell.Row- 1; r < currentCell.Row+ 2; r++)
 					{
-						//prevent going outside of the board index
-						if (r < 0 || r > _columns - 1)
+						//prevent going outside of the board index and ignore self
+						if (r < 0 || r > _rows - 1 || (c == currentCell.Column && r == currentCell.Row))
 						{
 							continue;
 						}
@@ -85,8 +89,7 @@ public class Board
 						Cell neighbor = _cells[c][r];
 						currentCell.Neighbors[colForNeighbors][rowForNeighbors] = neighbor;
 						neighboringBombs = neighbor.IsBomb ? neighboringBombs + 1 : neighboringBombs;
-	
-					rowForNeighbors++;
+						rowForNeighbors++;
 					}
 					colForNeighbors++;
 				}
@@ -105,7 +108,7 @@ public class Board
 	{
 		int tmpBombs = _bombCount;
 		int boardSize = _rows * _columns;
-		bool[] bombList = [];
+		bool[] bombList = new bool[boardSize];
 		Random random = new Random();
 
 		//set the correct amount of bombs within the boardSize

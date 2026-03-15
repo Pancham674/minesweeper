@@ -9,7 +9,6 @@ namespace minesweeper.Controllers
 		public IActionResult Game()
 		{
 			Board board = new Board();
-			board.InitCells();
 			return View(board);
 		}
 

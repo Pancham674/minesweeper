@@ -1,32 +1,37 @@
-﻿@{
+﻿@using System.Text.Json;
+
+@{
     ViewData["Title"] = "Minesweeper";
 }
 
 @model Board
 
-<div id="board" class="d-grid">
-    <script src="/js/cell.js"></script>
-    @for (int c = 0; c < Model.Columns; c++)
+
+
+<div id="board" data-board='@Html.Raw(JsonSerializer.Serialize(Model))'>
+    <h1>Columns: @Model.Columns, Rows: @Model.Rows</h1> 
+    <table>
+    @for (int r = 0; r < Model.Rows; r++)
     {
-        <div class="row">
-            @for (int r = 0; r < Model.Rows; r++) 
+        <tr>
+            @for (int c = 0; c < Model.Columns; c++) 
             {
                 Cell cell = Model.Cells[c][r];
-                <div>
-                    <button data-cell='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'
-                    onclick="onFieldClicked()">
+                <td>
+                    <button id="cell" data-cell='@Html.Raw(JsonSerializer.Serialize(cell))'>
                         @(cell.IsBomb ? "💣" : cell.NeighboringBombs)
                     </button>
 
-                </div>
-        
-                @* <partial name="Cell.cshtml" for="Cells[c][r]" data="Cells[c][r]">
-                </partial> *@
+                </td>
             }
-         </div>
+        </tr>
     }
+    </table>
 </div>
 
 <div>
     <button id="reset" class="btn btn-primary">Reset</button>
 </div>
+
+<script src="/js/cell.js"></script>
+<script src="/js/game.js"></script>
