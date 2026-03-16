@@ -1,9 +1,10 @@
 ﻿document.querySelectorAll('#cell').forEach(cellHtml => {
-    const cellModel = JSON.parse(cellHtml.dataset.cell);
+    const cellColumn = Number(cellHtml.dataset.column);
+    const cellRow = Number(cellHtml.dataset.row);
 
     cellHtml.addEventListener('click', () => {
         cellHtml.dispatchEvent(new CustomEvent("onCellLeftClick", {
-            detail: { cellModel, cellHtml },
+            detail: { cellColumn, cellRow },
             bubbles: true,
             composed: true
         }));
@@ -11,9 +12,8 @@
 
     cellHtml.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-
         cellHtml.dispatchEvent(new CustomEvent('onCellRightClick', {
-            detail: { cellModel, cellHtml },
+            detail: { cellColumn, cellRow },
             bubbles: true,
             composed: true
         }));
@@ -21,15 +21,15 @@
 
     cellHtml.addEventListener('mouseenter', () => {
         cellHtml.dispatchEvent(new CustomEvent('onCellHover', {
-            detail: { cellModel, cellHtml },
+            detail: { cellColumn, cellRow },
             bubbles: true,
             composed: true
         }));
     });
 
-    cellHtml.addEventListener('mouseleave', (e) => {
+    cellHtml.addEventListener('mouseleave', () => {
         cellHtml.dispatchEvent(new CustomEvent('onCellHoverEnded', {
-            detail: { cellModel, cellHtml },
+            detail: { cellColumn, cellRow },
             bubbles: true,
             composed: true
         }));

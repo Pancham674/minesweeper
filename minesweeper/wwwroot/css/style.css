@@ -1,0 +1,157 @@
+.empty.field {
+    background: #b182be;
+}
+
+.empty.field.won-game {
+    background: #82be8a;
+}
+
+.empty.field:hover,
+.bomb.field:hover, 
+.finished:hover {
+    filter: none;
+    cursor: default;
+}
+
+body {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background: #f8deff;
+    color: #451b50;
+}
+
+h1,
+.customizable {
+    border: 1px solid #7a428a;
+    padding: 5px;
+    background: #fbefff;
+}
+
+.custom-size-title {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px #7a428a dashed;
+    margin-bottom: 0;
+} 
+
+h2 , h3 {
+    margin: 5px;
+}
+
+h1 {
+    font-size: 200%;
+    margin: 10px auto 0;
+}
+
+h2 {
+    font-size: 130%;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    margin: 0 auto 10px;
+    font-size: 100%;
+}
+
+.user-defined h3 {
+    font-size: 100%;
+}
+
+.user-defined {
+    border-top: 1px #7a428a solid;
+}
+ 
+.user-defined:first-child {
+    border-top: none;
+}
+
+#gameBoard {
+    display: grid;
+    justify-content: center;
+    grid-template-rows: auto;
+    gap: 2px;
+    margin: 0 auto;
+    padding: 5px;
+    background: #fbefff;
+    border: 5px inset #7a428a;
+}
+
+#gameBoard.won {
+    background: #f2ffef;
+}
+
+.customizable {
+    padding: 15px;
+    width: 400px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+}
+.user-defined {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-defined > p,
+.user-defined > button,
+.user-defined > input {
+    margin: 10px 0px 5px;
+}
+
+
+button {
+    border: 1px #7a428a solid;
+    background: #e6a9f7;
+    color: #7a428a;
+    font-size: 100%;
+    padding: 5px;
+}
+
+button:hover {
+    filter: brightness(60%);
+    cursor: pointer;
+}
+
+.field {
+    width: 25px;
+    height: 25px;
+    font-size: 80%;
+    font-weight: bold;
+}
+
+.hovering {
+    filter: brightness(85%);
+}
+
+.won-game {
+    background: #a9f7a9;
+}
+
+
+.resetbtn {
+    border: 4px inset #7a428a;
+    border-bottom: none;
+}
+
+
+.board-info {
+    display: flex;
+    justify-content: space-around;
+    width: 450px;
+    margin: 0 auto 20px;
+    padding: 5px;
+    border: 4px inset #7a428a;
+    border-top: 4px inset #7a428a;
+    transform: translateY(-4px);
+    background: #fbefff;
+    z-index: -1;
+}
+
+.board-info > p {
+    margin: 10px auto;
+}

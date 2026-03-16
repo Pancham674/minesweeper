@@ -6,32 +6,62 @@
 
 @model Board
 
+<head>
+    <h1 id="title">Welcome to minesweeper!</h1>
+    <h2 id="subtitle">Good luck!</h2>
+    <button class="resetbtn" onclick="resetGame()"> Reset </button>
+</head>
 
+<body>
+    <div id="board" data-board='@Html.Raw(JsonSerializer.Serialize(Model))'>
+        <h1>Columns: @Model.Columns, Rows: @Model.Rows</h1> 
+        <table>
+        @for (int r = 0; r < Model.Rows; r++)
+        {
+            <tr>
+                @for (int c = 0; c < Model.Columns; c++) 
+                {
+                    Cell cell = Model.Cells[c][r];
+                    <td>
+                        <button id="cell" data-column="@c" data-row="@r">
+                            @* @(cell.IsBomb ? "💣" : cell.NeighboringBombs) *@
+                        </button>
 
-<div id="board" data-board='@Html.Raw(JsonSerializer.Serialize(Model))'>
-    <h1>Columns: @Model.Columns, Rows: @Model.Rows</h1> 
-    <table>
-    @for (int r = 0; r < Model.Rows; r++)
-    {
-        <tr>
-            @for (int c = 0; c < Model.Columns; c++) 
-            {
-                Cell cell = Model.Cells[c][r];
-                <td>
-                    <button id="cell" data-cell='@Html.Raw(JsonSerializer.Serialize(cell))'>
-                        @(cell.IsBomb ? "💣" : cell.NeighboringBombs)
-                    </button>
+                    </td>
+                }
+            </tr>
+        }
+        </table>
+    </div>
 
-                </td>
-            }
-        </tr>
-    }
-    </table>
-</div>
+    <div class="board-info">
+        <p id="remainingFlags"></p>
+        <p id="boardProgress"></p>
+        <p id="lifes"></p>
+    </div>
 
-<div>
-    <button id="reset" class="btn btn-primary">Reset</button>
-</div>
-
+    <div class="customizable">
+        <h2>Change Difficulty</h2>
+        <div class="buttons">
+            <button onclick="resetGame('5x15')">easy - 5x15</button>
+            <button onclick="resetGame('10x20')">normal - 10x20</button>
+            <button onclick="resetGame('20x30')">hard - 20x30</button>
+        </div>
+        <h2 class="custom-size-title">User defined</h2>
+        <div class="user-defined">
+            <h3>Custom size:</h3>
+            <input type="number" id="customRow" min="5" max="99" placeholder="row">
+            <p>X</p>
+            <input type="number" id="customColumn" min="5" max="99" placeholder="column">
+            <button onclick="confirmCustomSize()">Confirm size</button>
+        </div>
+        <div class="user-defined">
+            <h3>Lifes:</h3>
+            <input type="number" id="customLifes" min="1" max="99" placeholder="amount">
+            <button onclick="confirmLifeAmount()">Confirm lifes</button>
+        </div>
+    </div>
+</body>
 <script src="/js/cell.js"></script>
 <script src="/js/game.js"></script>
+<link rel="stylesheet" href="/css/style.css" />
