@@ -44,20 +44,25 @@
 @section Scripts{
     <script>
         $("#partialBoard").load("/Home/LoadBoard", { }, onServerResponse);
+        $('.resetsGame').click(resetGame);
 
-        function resetGame(){
-            var column = $(this).data('column');
-            var row = $(this).data("row");
+        //this function is either called from the difficulty or reset btns, or the user defined btns.
+        function resetGame(sender, customColumn, customRow){
+            var column = customColumn === undefined ? $(this).data('column') : customColumn;
+            var row = customRow === undefined ? $(this).data("row") : customRow;
             $("#partialBoard").load("/Home/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
         }
 
         function onServerResponse(response, stat, xhr) {
             console.log("Server response was", stat);
+
             if (stat == "success") {
-                $('.resetsGame').click(resetGame);
+                changeTitlesOnLoss();
                 refreshCellEvents();
                 refreshBoardElements();
-            } else {
+                $('.resetsGame.resetbtn').click(resetGame);
+            }
+            else {
                 console.log("stat:", stat, "\nresp:", response, "\nxhr:",xhr);
             }
         }
