@@ -24,7 +24,6 @@ let _roundStarted;
 let _setFlags;
 
 const _fracNumBombs = 4;
-const _noNeighboringBombs = "";
 
 
 function refreshBoardElements() {
@@ -265,7 +264,7 @@ function uncoverNeighboringFields(cellModel, cellView) {
             }
 
             //continue uncovering fields that have no bombs as neigbors!!!
-            if (neighborModel.NeighboringBombs == _noNeighboringBombs) {
+            if (neighborModel.NeighboringBombs == 0) {
                 neighborView.className = "empty field";
                 uncoverNeighboringFields(neighborModel, neighborView);
             }

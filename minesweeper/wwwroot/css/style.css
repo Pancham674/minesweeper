@@ -13,7 +13,8 @@
     cursor: default;
 }
 
-body {
+.main-content,
+#partialBoard {
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -67,7 +68,7 @@ h2 {
     border-top: none;
 }
 
-#gameBoard {
+#board {
     display: grid;
     justify-content: center;
     grid-template-rows: auto;
@@ -78,7 +79,7 @@ h2 {
     border: 5px inset #7a428a;
 }
 
-#gameBoard.won {
+#board.won {
     background: #f2ffef;
 }
 
@@ -120,7 +121,7 @@ button:hover {
 .field {
     width: 25px;
     height: 25px;
-    font-size: 80%;
+    font-size: 70%;
     font-weight: bold;
 }
 
@@ -149,7 +150,6 @@ button:hover {
     border-top: 4px inset #7a428a;
     transform: translateY(-4px);
     background: #fbefff;
-    z-index: -1;
 }
 
 .board-info > p {

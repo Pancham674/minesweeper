@@ -10,10 +10,7 @@
                 {
                     Cell cell = Model.Cells[c][r];
                     <td>
-                        <button class="cell" data-column="@c" data-row="@r">
-                            @* @(cell.IsBomb ? "💣" : cell.NeighboringBombs) *@
-                        </button>
-
+                        <button class="field" data-column="@c" data-row="@r"></button>
                     </td>
                 }
             </tr>

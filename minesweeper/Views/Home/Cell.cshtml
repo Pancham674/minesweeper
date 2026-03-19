@@ -1,8 +1,0 @@
-﻿@model Cell
-
-<div>
-    <button data-cell='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))' onclick="">
-             @(Model.IsBomb ? "💣" : Model.NeighboringBombs)
-    </button>
-
-</div>

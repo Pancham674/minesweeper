@@ -1,5 +1,5 @@
 ﻿function refreshCellEvents() {
-    document.querySelectorAll('.cell').forEach(cellHtml => {
+    document.querySelectorAll('.field').forEach(cellHtml => {
         cellHtml.addEventListener('click', dispatchLeftClick);
         cellHtml.addEventListener('contextmenu', dispatchRightClick);
         cellHtml.addEventListener('mouseenter', dispatchMouseEnter);

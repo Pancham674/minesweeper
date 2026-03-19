@@ -1,13 +1,8 @@
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
 public class Board
 {
 	int _rows;
 	int _columns;
 	int _bombCount;
-
-	int _lives;
-
 
 	Cell[][] _cells;
 
@@ -74,7 +69,6 @@ public class Board
 						continue;
 					}
 
-					currentCell.Neighbors[colForNeighbors] = new Cell[3];
 					int rowForNeighbors = 0;
 
 					//will check the columns beside the current field (col-1 = left field, col+1 = right field)
@@ -87,7 +81,6 @@ public class Board
 						}
 
 						Cell neighbor = _cells[c][r];
-						currentCell.Neighbors[colForNeighbors][rowForNeighbors] = neighbor;
 						neighboringBombs = neighbor.IsBomb ? neighboringBombs + 1 : neighboringBombs;
 						rowForNeighbors++;
 					}

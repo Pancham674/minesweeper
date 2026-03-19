@@ -4,13 +4,10 @@
 
 @model Board
 
-<head>
+<div class="main-content">
     <h1 id="title">Welcome to minesweeper!</h1>
     <h2 id="subtitle">Good luck!</h2>
-</head>
-
-<body>
-    @* <partial name="_Board" model="Model" /> *@
+    
     <div id="partialBoard"></div>
     <div class="board-info">
         <p id="remainingFlags"></p>
@@ -39,7 +36,7 @@
             <button onclick="confirmLifeAmount()">Confirm lifes</button>
         </div>
     </div>
-</body>
+</div>
 
 @section Scripts{
     <script>
