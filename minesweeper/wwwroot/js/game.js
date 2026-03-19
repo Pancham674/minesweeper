@@ -1,56 +1,72 @@
-﻿const _boardHtml = document.getElementById('board');
-const _boardHtmlTbody = _boardHtml.children[1].children[0];
+﻿let _boardModel;
+let _boardHtml;
+let _boardHtmlTbody;
 //do _boardHtmlTbody.children[Row].cells[Column].children[0] to get the html element of the cellModel 
 
-const _boardModel = JSON.parse(_boardHtml.dataset.board);
-
 let _currentBoardSize;
-let _fieldAmount = _boardModel.Rows * _boardModel.Columns;
+let _fieldAmount;
 
 //reuse lifes in future rounds
 let _originalLifeAmount = 1;
 let _firstRound = true;
 let _lifeAmount = _originalLifeAmount;
-let _bombsInGF = _boardModel.BombCount;
+let _bombsInGF;
 
 //htmlElements
-let _remainingFlags = document.getElementById("remainingFlags");
-let _boardProgress = document.getElementById("boardProgress");
-let _lifes = document.getElementById("lifes");
+const _remainingFlags = document.getElementById("remainingFlags");
+const _boardProgress = document.getElementById("boardProgress");
+const _lifes = document.getElementById("lifes");
 
-_remainingFlags.textContent = `Remaining flags: ${_bombsInGF}/${_bombsInGF}`;
-_boardProgress.textContent = `Covered fields: ${_fieldAmount - _bombsInGF}/${_fieldAmount - _bombsInGF}`;
-_lifes.textContent = `Lifes: ${_lifeAmount}`;
 
 //player specific elements
 let _lossStreakCount = 0;
-let _uncoveredFields = 0;
+let _uncoveredFields;
 let _roundStarted;
-let _setFlags = 0;
+let _setFlags;
 
 const _fracNumBombs = 4;
 const _noNeighboringBombs = "";
 
-_boardHtml.addEventListener('onCellLeftClick', e => {
-    const { cellColumn, cellRow } = e.detail;
-    onFieldClicked(_boardModel.Cells[cellColumn][cellRow], _boardHtmlTbody.children[cellRow].cells[cellColumn].children[0]);
-});
 
-_boardHtml.addEventListener('onCellRightClick', e => {
-    const { cellColumn, cellRow } = e.detail;
-    setFlag(_boardModel.Cells[cellColumn][cellRow], _boardHtmlTbody.children[cellRow].cells[cellColumn].children[0]);
-});
+function refreshBoardElements() {
+    _boardHtml = document.getElementById('board');
+    _boardModel = JSON.parse(_boardHtml.dataset.board);
+    _boardHtmlTbody = _boardHtml.firstElementChild.firstElementChild;
 
-_boardHtml.addEventListener('onCellHover', e => {
-    const { cellColumn, cellRow } = e.detail;
-    onFieldEnter(_boardModel.Cells[cellColumn][cellRow], _boardHtmlTbody.children[cellRow].cells[cellColumn].children[0]);
-});
+    _bombsInGF = _boardModel.BombCount;
+    _fieldAmount = _boardModel.Rows * _boardModel.Columns;
 
-_boardHtml.addEventListener('onCellHoverEnded', e => {
-    const { cellColumn, cellRow } = e.detail;
-    onFieldLeave(_boardModel.Cells[cellColumn][cellRow], _boardHtmlTbody.children[cellRow].cells[cellColumn].children[0]);
-});
+    _setFlags = 0;
+    _uncoveredFields = 0;
+    _roundStarted = false;
+    _lifeAmount = _originalLifeAmount;
 
+    _remainingFlags.textContent = `Remaining flags: ${_bombsInGF}/${_bombsInGF}`;
+    _boardProgress.textContent = `Covered fields: ${_fieldAmount - _bombsInGF}/${_fieldAmount - _bombsInGF}`;
+    _lifes.textContent = `Lifes: ${_lifeAmount}`;
+
+    _boardHtml.oncontextmenu = (e) => { e.preventDefault(); }
+
+    _boardHtml.addEventListener('onCellLeftClick', e => {
+        const { column, row } = e.detail;
+        onFieldClicked(_boardModel.Cells[column][row], _boardHtmlTbody.children[row].cells[column].children[0]);
+    });
+
+    _boardHtml.addEventListener('onCellRightClick', e => {
+        const { column, row } = e.detail;
+        setFlag(_boardModel.Cells[column][row], _boardHtmlTbody.children[row].cells[column].children[0]);
+    });
+
+    _boardHtml.addEventListener('onCellHover', e => {
+        const { column, row } = e.detail;
+        onFieldEnter(_boardModel.Cells[column][row], _boardHtmlTbody.children[row].cells[column].children[0]);
+    });
+
+    _boardHtml.addEventListener('onCellHoverEnded', e => {
+        const { column, row } = e.detail;
+        onFieldLeave(_boardModel.Cells[column][row], _boardHtmlTbody.children[row].cells[column].children[0]);
+    });
+}
 
 //will reveal the clicked field and performs a specific action based on its attributes
 function onFieldClicked(cellModel, cellHtml) {
@@ -65,6 +81,7 @@ function onFieldClicked(cellModel, cellHtml) {
 
         //treat bomb as flag for chording
         cellModel.IsFlagged = true;
+        cellModel.IsExploded = true;
         cellHtml.onclick = () => { };
         cellHtml.oncontextmenu = (e) => { e.preventDefault() };
 
@@ -210,43 +227,6 @@ function changeBoardProgress(fieldWasBomb) {
     }
 }
 
-function setUpField(newBoardSize) {
-    let maxRows = newBoardSize.split("x")[0];
-    let maxColumns = newBoardSize.split("x")[1];
-    _fieldAmount = maxRows * maxColumns;
-
-    _boardModel.Rows = maxRows;
-    _boardModel.Columns = maxColumns;
-    _boardModel.InitCells();
-
-    // determine the amount of bombs based on the field size
-    //_bombsInGF = Math.round((maxRows * maxColumns) / _fracNumBombs);
-    _bombsInGF = _boardModel.BombCount;
-    _remainingFlags.textContent = `Remaining flags: ${_bombsInGF}/${_bombsInGF}`;
-    _boardProgress.textContent = `Covered fields: ${_fieldAmount - _bombsInGF}/${_fieldAmount - _bombsInGF}`;
-
-    _currentBoardSize = newBoardSize;
-
-    _setFlags = 0;
-    _roundStarted = false;
-    _lifeAmount = _originalLifeAmount;
-    _lifes.textContent = `Lifes: ${_lifeAmount}`;
-    _uncoveredFields = 0;
-
-    //_boardHtml.className = "";
-    //_boardHtml.style.gridTemplateColumns = `repeat(${maxColumns}, auto`;
-    _boardHtml.oncontextmenu = (e) => { e.preventDefault(); }
-
-    //set number input width to its placeholder text
-    if (_firstRound) {
-        var inpNums = document.querySelectorAll('input');
-        for (i = 0; i < inpNums.length; i++) {
-            inpNums[i].setAttribute('size', inpNums[i].getAttribute('placeholder').length);
-        }
-        _firstRound = false;
-    }
-}
-
 //uncovers neighbors if the current field has no neigboring bombs
 function uncoverNeighboringFields(cellModel, cellHtml) {
     cellHtml.onclick = () => { };
@@ -333,13 +313,19 @@ function revealBoard(wonGame) {
         row.forEach((cellModel) => {
             const cellView = _boardHtmlTbody.children[cellModel.Row].cells[cellModel.Column].children[0];
 
-            cellView.onclick = () => { };
+            cellView.removeEventListener('click', dispatchLeftClick);
+            cellView.removeEventListener('contextmenu', dispatchRightClick);
+            cellView.removeEventListener('mouseenter', dispatchMouseEnter);
+            cellView.removeEventListener('mouseleave', dispatchMouseLeave);
+
             cellView.oncontextmenu = (e) => { e.preventDefault(); };
-            cellView.onmouseenter = () => { };
-            cellView.onmouseleave = () => { };
 
             //reveal all uncovered bombs
-            if (!cellModel.isRevealed && cellModel.isBomb) {
+            if (cellModel.IsExploded)
+            {
+                cellView.textContent = "💥";
+            }
+            else if (!cellModel.IsRevealed && cellModel.IsBomb) {
                 cellView.textContent = "💣";
             }
 
@@ -371,18 +357,6 @@ function setFlag(cellModel, cellHtml) {
     }
 
     _remainingFlags.textContent = `Remaining flags: ${_bombsInGF - _setFlags}/${_bombsInGF}`;
-}
-
-//resets the game by refilling the board with the same fieldSize
-function resetGame(newFieldSize) {
-    //warn user about the reset if a new size has been choosen
-    if (newFieldSize != undefined && _roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
-        "\nAre you sure you want to continue?")) {
-        return;
-    }
-
-    changeTitlesOnLoss();
-    setUpField(newFieldSize ?? _currentBoardSize);
 }
 
 //accepts the custom size if its valid and resets the board

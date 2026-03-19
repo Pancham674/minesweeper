@@ -9,6 +9,7 @@ public class Cell
 		_isBomb = myIsBomb;
 
 		_isRevealed = false;
+		_isExploded = false;
 		_isFlagged = false;
 
 		_neighbors = new Cell[3][];
@@ -21,6 +22,7 @@ public class Cell
 	Cell[][] _neighbors;
 	
 	bool _isRevealed;
+	bool _isExploded;
 	bool _isFlagged;
 	bool _isBomb;
 	
@@ -41,6 +43,14 @@ public class Cell
 		set => _isFlagged = value;
 	}
 
+	/// <summary>
+	/// The bomb that the player clicked on.
+	/// </summary>
+	public bool IsExploded
+	{
+		get => _isExploded;
+		set => _isExploded = value;
+	}
 	/// <summary>
 	/// Is this cells number of bombs that are around it. Will be -1 if the cell itself is a bomb
 	/// </summary>

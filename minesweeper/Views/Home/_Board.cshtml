@@ -1,0 +1,22 @@
+﻿@model Board
+<button class="resetsGame resetbtn" data-column="@Model.Columns" data-row="@Model.Rows">Reset</button>
+
+<div id="board" data-board='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
+    <table>
+        @for (int r = 0; r < Model.Rows; r++)
+        {
+            <tr>
+                @for (int c = 0; c < Model.Columns; c++)
+                {
+                    Cell cell = Model.Cells[c][r];
+                    <td>
+                        <button class="cell" data-column="@c" data-row="@r">
+                            @* @(cell.IsBomb ? "💣" : cell.NeighboringBombs) *@
+                        </button>
+
+                    </td>
+                }
+            </tr>
+        }
+    </table>
+</div>

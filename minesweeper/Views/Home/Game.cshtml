@@ -1,6 +1,4 @@
-﻿@using System.Text.Json;
-
-@{
+﻿@{
     ViewData["Title"] = "Minesweeper";
 }
 
@@ -9,31 +7,11 @@
 <head>
     <h1 id="title">Welcome to minesweeper!</h1>
     <h2 id="subtitle">Good luck!</h2>
-    <button class="resetbtn" onclick="resetGame()"> Reset </button>
 </head>
 
 <body>
-    <div id="board" data-board='@Html.Raw(JsonSerializer.Serialize(Model))'>
-        <h1>Columns: @Model.Columns, Rows: @Model.Rows</h1> 
-        <table>
-        @for (int r = 0; r < Model.Rows; r++)
-        {
-            <tr>
-                @for (int c = 0; c < Model.Columns; c++) 
-                {
-                    Cell cell = Model.Cells[c][r];
-                    <td>
-                        <button id="cell" data-column="@c" data-row="@r">
-                            @* @(cell.IsBomb ? "💣" : cell.NeighboringBombs) *@
-                        </button>
-
-                    </td>
-                }
-            </tr>
-        }
-        </table>
-    </div>
-
+    @* <partial name="_Board" model="Model" /> *@
+    <div id="partialBoard"></div>
     <div class="board-info">
         <p id="remainingFlags"></p>
         <p id="boardProgress"></p>
@@ -43,9 +21,9 @@
     <div class="customizable">
         <h2>Change Difficulty</h2>
         <div class="buttons">
-            <button onclick="resetGame('5x15')">easy - 5x15</button>
-            <button onclick="resetGame('10x20')">normal - 10x20</button>
-            <button onclick="resetGame('20x30')">hard - 20x30</button>
+            <button class="resetsGame" data-column="15" data-row="5">easy - 5x15</button>
+            <button class="resetsGame" data-column="20" data-row="10">normal - 10x20</button>
+            <button class="resetsGame" data-column="30" data-row="20">hard - 20x30</button>
         </div>
         <h2 class="custom-size-title">User defined</h2>
         <div class="user-defined">
@@ -62,6 +40,29 @@
         </div>
     </div>
 </body>
-<script src="/js/cell.js"></script>
-<script src="/js/game.js"></script>
+
+@section Scripts{
+    <script>
+        $("#partialBoard").load("/Home/LoadBoard", { }, onServerResponse);
+
+        function resetGame(){
+            var column = $(this).data('column');
+            var row = $(this).data("row");
+            $("#partialBoard").load("/Home/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
+        }
+
+        function onServerResponse(response, stat, xhr) {
+            console.log("Server response was", stat);
+            if (stat == "success") {
+                $('.resetsGame').click(resetGame);
+                refreshCellEvents();
+                refreshBoardElements();
+            } else {
+                console.log("stat:", stat, "\nresp:", response, "\nxhr:",xhr);
+            }
+        }
+    </script>
+    <script src="/js/cell.js"></script>
+    <script src="/js/game.js"></script>
+}
 <link rel="stylesheet" href="/css/style.css" />

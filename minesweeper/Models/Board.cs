@@ -22,10 +22,10 @@ public class Board
 		InitCells();
 	}
 
-	public Board(int myRows, int myColumns)
+	public Board(int myColumns, int myRows)
 	{
-		_rows = myRows;
 		_columns = myColumns;
+		_rows = myRows;
 		_cells = new Cell[_columns][];
 		_bombCount = (int)Math.Round(_rows * _columns / 4f);
 	}
