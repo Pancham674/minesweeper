@@ -380,11 +380,6 @@ function confirmLifeAmount() {
         return;
     }
 
-    //warn user about the reset
-    if (_roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
-        "\nAre you sure you want to continue?")) {
-        return;
-    }
 
     _originalLifeAmount = userAmount;
     _lifes.textContent = `Lifes: ${_lifeAmount}`;

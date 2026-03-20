@@ -3,14 +3,13 @@
 
 <div id="board" data-board='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
     <table>
-        @for (int r = 0; r < Model.Rows; r++)
+        @for (int row = 0; row < Model.Rows; row++)
         {
             <tr>
-                @for (int c = 0; c < Model.Columns; c++)
+                @for (int col = 0; col < Model.Columns; col++)
                 {
-                    Cell cell = Model.Cells[c][r];
                     <td>
-                        <button class="field" data-column="@c" data-row="@r"></button>
+                        <button class="field" data-column="@col" data-row="@row"></button>
                     </td>
                 }
             </tr>
