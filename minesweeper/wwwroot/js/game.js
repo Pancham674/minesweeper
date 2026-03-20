@@ -25,6 +25,34 @@ let _setFlags;
 
 const _fracNumBombs = 4;
 
+$("#partialBoard").load("/Home/LoadBoard", {}, onServerResponse);
+$('.resetsGame').click(resetGame);
+
+//this function is either called from the difficulty or reset btns, or the user defined btns.
+function resetGame(sender, customColumn, customRow) {
+    if (_roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
+        "\nAre you sure you want to continue?")) {
+        return;
+    }
+
+    var column = customColumn === undefined ? $(this).data('column') : customColumn;
+    var row = customRow === undefined ? $(this).data("row") : customRow;
+    $("#partialBoard").load("/Home/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
+}
+
+function onServerResponse(response, stat, xhr) {
+    console.log("Server response was", stat);
+
+    if (stat == "success") {
+        changeTitlesOnLoss();
+        refreshCellEvents();
+        refreshBoardElements();
+        $('.resetsGame.resetbtn').click(resetGame);
+    }
+    else {
+        console.log("stat:", stat, "\nresp:", response, "\nxhr:", xhr);
+    }
+}
 
 function refreshBoardElements() {
     _boardView = document.getElementById('board');
