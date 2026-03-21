@@ -31,7 +31,6 @@ namespace minesweeper.Controllers
 			return PartialView("_Board", _board);
 		}
 
-		[HttpPost]
 		public IActionResult ResetGame(int myColumn, int myRow)
 		{
 			_board = new Board(myColumn, myRow);
