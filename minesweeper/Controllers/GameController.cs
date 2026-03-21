@@ -6,7 +6,7 @@ namespace minesweeper.Controllers
 	{
 		public static Board _board = new Board();
 
-		public IActionResult Index()
+		public IActionResult Game()
 		{
 			if (_board.CellCount == 0)
 			{
