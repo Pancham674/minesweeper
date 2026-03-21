@@ -3,14 +3,18 @@ public class Board
 	int _rows;
 	int _columns;
 	int _bombCount;
+	
+	Random _rand = new Random();
 
 	Cell[][] _cells;
 
+	/// <summary>
+	/// Standard constructor, will initialise a _rand size between 5 to 15 coluumns and rows
+	/// </summary>
 	public Board()
 	{
-		Random rand = new Random();
-		_rows = rand.Next(5, 15);
-		_columns = rand.Next(5, 15);
+		_rows = _rand.Next(5, 15);
+		_columns = _rand.Next(5, 15);
 		_cells = new Cell[_columns][];
 		_bombCount = (int)Math.Round(_rows * _columns / 4f);
 
@@ -53,14 +57,13 @@ public class Board
 				//ignore bombs since they shouldnt have numbers
 				if (currentCell.IsBomb)
 				{
-					//createFieldElement(currentCell);
 					continue;
 				}
 
 				int neighboringBombs = 0;
 				int colForNeighbors = 0;
 
-				//will check the rows between the current field (row-1 = upper field, row+1 = lower field)
+				//will check the rows between the current cell (row-1 = upper cell, row+1 = lower cell)
 				for (int c = currentCell.Column - 1; c < currentCell.Column+ 2; c++)
 				{
 					//prevent going outside of the board index
@@ -71,7 +74,7 @@ public class Board
 
 					int rowForNeighbors = 0;
 
-					//will check the columns beside the current field (col-1 = left field, col+1 = right field)
+					//will check the columns beside the current cell (col-1 = left cell, col+1 = right cell)
 					for (int r = currentCell.Row- 1; r < currentCell.Row+ 2; r++)
 					{
 						//prevent going outside of the board index and ignore self
@@ -80,21 +83,19 @@ public class Board
 							continue;
 						}
 
-						Cell neighbor = _cells[c][r];
-						neighboringBombs = neighbor.IsBomb ? neighboringBombs + 1 : neighboringBombs;
+						neighboringBombs = _cells[c][r].IsBomb ? neighboringBombs + 1 : neighboringBombs;
 						rowForNeighbors++;
 					}
 					colForNeighbors++;
 				}
 
 				currentCell.NeighboringBombs = neighboringBombs;
-				//createFieldElement(currentCell);
 			}
 		}
 	}
 
 	/// <summary>
-	/// Initializes a Queue for the board that contains all the position of all bombs and safe fields
+	/// Initializes and returns a bool Queue for the board that contains all the position of all bombs and safe cells
 	/// </summary>
 	/// <returns></returns>
 	Queue<bool> InitBombList()
@@ -102,14 +103,13 @@ public class Board
 		int tmpBombs = _bombCount;
 		int boardSize = _rows * _columns;
 		bool[] bombList = new bool[boardSize];
-		Random random = new Random();
 
-		//set the correct amount of bombs within the boardSize
+		//after this bombList will have the correct amount of cells randomized to be bombs
 		for (int i = 0; i < boardSize; i++)
 		{
-			int rand = random.Next(0, 4);
+			int randNumber = _rand.Next(0, 4);
 
-			if (rand == 3 && tmpBombs > 0)
+			if (randNumber == 3 && tmpBombs > 0)
 			{
 				bombList[i] = true;
 				tmpBombs--;
@@ -120,18 +120,18 @@ public class Board
 			}
 		}
 
-		//put in the rest of the bombs if tmpBombs isnt 0
+		//...but it may not have _bombCount amount of bombs, so put in the rest till tmpBombs is 0
 		while (tmpBombs > 0)
-		{	//select random fields to be bombs, if its not already one
-			int randomField = random.Next(boardSize - 1);
-			if (!bombList[randomField])
+		{	//select random cells to be bombs, if its not already one
+			int randCell = _rand.Next(boardSize - 1);
+			if (!bombList[randCell])
 			{
-				bombList[randomField] = true;
+				bombList[randCell] = true;
 				tmpBombs--;
 			}
 		}
 
-		return new Queue<bool>(bombList);
+		return new Queue<bool>(bombList);			//yay
 	}
 
 	public int Rows

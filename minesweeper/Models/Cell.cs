@@ -55,7 +55,7 @@ public class Cell
 	{
 		get => _neighboringBombs;
 		
-		//only fields that aren't bombs should have a number
+		//only cells that aren't bombs should have a number
 		set => _neighboringBombs = _isBomb ? -1 : value;
 	}
 }

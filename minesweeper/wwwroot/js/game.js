@@ -1,34 +1,44 @@
-﻿let _boardModel;
-let _boardView;
+﻿/**
+ * Contains the tableBody element for all cellViews
+ * do _boardViewTableBody.children[Row].cells[Column].children[0] to get the view of a specific cellModel 
+ */
 let _boardViewTableBody;
-//do _boardViewTableBody.children[Row].cells[Column].children[0] to get the view element of the cellModel 
-
-let _fieldAmount;
+let _boardModel;
+let _boardView;
 
 //reuse lifes in future rounds
 let _originalLifeAmount = 1;
-let _firstRound = true;
 let _lifeAmount = _originalLifeAmount;
-let _bombsInGF;
+let _bombCount;
 
 //htmlElements
 const _remainingFlags = document.getElementById("remainingFlags");
 const _boardProgress = document.getElementById("boardProgress");
 const _lifes = document.getElementById("lifes");
 
-
 //player specific elements
 let _lossStreakCount = 0;
-let _uncoveredFields;
+let _uncoveredCells;
 let _roundStarted;
 let _setFlags;
 
 const _fracNumBombs = 4;
+let _cellCount;
+
 
 $("#partialBoard").load("/Home/LoadBoard", {}, onServerResponse);
 $('.resetsGame').click(resetGame);
 
-//this function is either called from the difficulty or reset btns, or the user defined btns.
+//sets number input width to its placeholder text
+let inpNums = document.querySelectorAll('input');
+for (i = 0; i < inpNums.length; i++) {
+    inpNums[i].setAttribute('size', inpNums[i].getAttribute('placeholder').length);
+}
+
+/**
+* Will reset the game though interaction with server.
+* customColumn and -Row will be defined if this function gets called from the user defined custom size option.
+*/
 function resetGame(sender, customColumn, customRow) {
     if (_roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
         "\nAre you sure you want to continue?")) {
@@ -54,28 +64,31 @@ function onServerResponse(response, stat, xhr) {
     }
 }
 
+/**
+ * Gets the current board model, view and other elements after a reset.
+ */
 function refreshBoardElements() {
     _boardView = document.getElementById('board');
     _boardModel = JSON.parse(_boardView.dataset.board);
     _boardViewTableBody = _boardView.firstElementChild.firstElementChild;
 
-    _bombsInGF = _boardModel.BombCount;
-    _fieldAmount = _boardModel.Rows * _boardModel.Columns;
+    _bombCount = _boardModel.BombCount;
+    _cellCount = _boardModel.Rows * _boardModel.Columns;
 
     _setFlags = 0;
-    _uncoveredFields = 0;
+    _uncoveredCells = 0;
     _roundStarted = false;
     _lifeAmount = _originalLifeAmount;
 
-    _remainingFlags.textContent = `Remaining flags: ${_bombsInGF}/${_bombsInGF}`;
-    _boardProgress.textContent = `Covered fields: ${_fieldAmount - _bombsInGF}/${_fieldAmount - _bombsInGF}`;
+    _remainingFlags.textContent = `Remaining flags: ${_bombCount}/${_bombCount}`;
+    _boardProgress.textContent = `Covered Cells: ${_cellCount - _bombCount}/${_cellCount - _bombCount}`;
     _lifes.textContent = `Lifes: ${_lifeAmount}`;
 
     _boardView.oncontextmenu = (e) => { e.preventDefault(); }
 
     _boardView.addEventListener('onCellLeftClick', e => {
         const { column, row } = e.detail;
-        onFieldClicked(_boardModel.Cells[column][row], _boardViewTableBody.children[row].cells[column].children[0]);
+        onCellClicked(_boardModel.Cells[column][row], _boardViewTableBody.children[row].cells[column].children[0]);
     });
 
     _boardView.addEventListener('onCellRightClick', e => {
@@ -85,17 +98,19 @@ function refreshBoardElements() {
 
     _boardView.addEventListener('onCellHover', e => {
         const { column, row } = e.detail;
-        onFieldEnter(_boardModel.Cells[column][row]);
+        onCellHover(_boardModel.Cells[column][row]);
     });
 
     _boardView.addEventListener('onCellHoverEnded', e => {
         const { column, row } = e.detail;
-        onFieldLeave(_boardModel.Cells[column][row]);
+        onCellHoverEnded(_boardModel.Cells[column][row]);
     });
 }
 
-//will reveal the clicked field and performs a specific action based on its attributes
-function onFieldClicked(cellModel, cellView) {
+/**
+ * Will reveal the clicked cell and performs a specific action based on its attributes
+*/
+function onCellClicked(cellModel, cellView) {
     _roundStarted = true;
 
     if (cellModel.IsFlagged) {
@@ -119,17 +134,17 @@ function onFieldClicked(cellModel, cellView) {
     }
     // player wants to use chord
     else if (cellModel.IsRevealed) {
-        fieldChord(cellModel, cellView);
+        Chord(cellModel, cellView);
         return;
     }
 
     cellModel.IsRevealed = true;
     cellView.textContent = cellModel.IsBomb ? "💣" : cellModel.NeighboringBombs;
-    cellView.className = cellModel.NeighboringBombs == 0 ? "empty field" : "field";
+    cellView.className = cellModel.NeighboringBombs == 0 ? "empty cell" : "cell";
     changeBoardProgress(cellModel.IsBomb);
 
     if (cellModel.NeighboringBombs == 0) {
-        uncoverNeighboringFields(cellModel, cellView);
+        uncoverNeighboringCells(cellModel, cellView);
     }
 
     if (isGameFinished()) {
@@ -139,8 +154,12 @@ function onFieldClicked(cellModel, cellView) {
     }
 }
 
-//uncover neighbors if the flags on the neighbors is equal/greater than the neigboring bombs
-function fieldChord(cellModel, cellView) {
+/**
+ * Uncovers neighbors around the clicked cellView if the flags on the neighbors is equal/greater than its neigboring bombs
+ * @param {any} cellModel
+ * @param {any} cellView
+ */
+function Chord(cellModel, cellView) {
     let flaggedNeighbors = 0;
     let neighbors = [];
 
@@ -170,20 +189,25 @@ function fieldChord(cellModel, cellView) {
     //check if theres an equal or greater amount of flags placed around it
     if (flaggedNeighbors >= cellModel.NeighboringBombs) {
         neighbors.forEach(index => {
-            //ignore uncovered and flagged fields
+            //ignore uncovered and flagged cells
             if (index.model.IsRevealed || index.model.IsFlagged) {
                 return;
             }
 
             //uncover neigbors
-            onFieldClicked(index.model, index.view);
+            onCellClicked(index.model, index.view);
         })
     }
 }
 
-//highlight the neigbors of an uncovered field by adding a classname
-function onFieldEnter(cellModel) {
-    //only neighbors of uncovered fields should be marked
+/**
+ * Highlights the neigbors of an uncovered cell by adding a classname. The uncovered cell must be hovered on.
+ * Intended to help the player see the neighbors more directly, especially for chording.
+ * @param {any} cellModel
+ * @returns
+ */
+function onCellHover(cellModel) {
+    //only neighbors of uncovered cells should be marked
     if (!cellModel.IsRevealed) {
         return;
     }
@@ -214,9 +238,14 @@ function onFieldEnter(cellModel) {
     }
 }
 
-//remove a classname of the neighbors from an uncovered field so its not highlighted anymore
-function onFieldLeave(cellModel) {
-    if (!cellModel.IsRevealed) {            //ignore covered fields since their neigbors wont be marked
+/**
+* Removes a classname from the neighbors of an uncovered cell whenever the hover ends.
+* That way the neighbors arent highlighted anymore.
+* @param {any} cellModel
+* @returns
+*/
+function onCellHoverEnded(cellModel) {
+    if (!cellModel.IsRevealed) {            //ignore covered cells since their neigbors wont be marked
         return;
     }
 
@@ -246,15 +275,23 @@ function onFieldLeave(cellModel) {
     }
 }
 
-function changeBoardProgress(fieldWasBomb) {
-    if (!fieldWasBomb) {
-        _uncoveredFields++;
-        _boardProgress.textContent = `Covered fields: ${(_fieldAmount - _bombsInGF) - _uncoveredFields}/${_fieldAmount - _bombsInGF}`;
+/**
+ * Whenever the progress changes this function will update the amount of covered cells inn the UI.
+ * @param {any} cellWasBomb
+ */
+function changeBoardProgress(cellWasBomb) {
+    if (!cellWasBomb) {
+        _uncoveredCells++;
+        _boardProgress.textContent = `Covered cells: ${(_cellCount - _bombCount) - _uncoveredCells}/${_cellCount - _bombCount}`;
     }
 }
 
-//uncovers neighbors if the current field has no neigboring bombs
-function uncoverNeighboringFields(cellModel, cellView) {
+/**
+ * Uncovers neighbors if the current cell has no neigboring bombs, aka a 0.
+ * @param {any} cellModel
+ * @param {any} cellView
+ */
+function uncoverNeighboringCells(cellModel, cellView) {
     cellView.onclick = () => { };
     cellView.oncontextmenu = (cursor) => {
         cursor.preventDefault();
@@ -274,13 +311,13 @@ function uncoverNeighboringFields(cellModel, cellView) {
             const neighborModel = _boardModel.Cells[cCol][cRow];
             const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
 
-            //ignore self and uncovered fields
+            //ignore self and uncovered cells
             if (neighborModel === cellModel || neighborModel.IsRevealed) {
                 continue;
             }
 
             neighborModel.IsRevealed = true;
-            neighborView.className = "field";
+            neighborView.className = "cell";
             neighborView.textContent = neighborModel.NeighboringBombs;
             changeBoardProgress();
 
@@ -288,19 +325,23 @@ function uncoverNeighboringFields(cellModel, cellView) {
             if (neighborModel.IsFlagged) {
                 _setFlags--;
                 neighborModel.IsFlagged = false;
-                _remainingFlags.textContent = `Remaining flags: ${_bombsInGF - _setFlags}/${_bombsInGF}`;
+                _remainingFlags.textContent = `Remaining flags: ${_bombCount - _setFlags}/${_bombCount}`;
             }
 
-            //continue uncovering fields that have no bombs as neigbors!!!
+            //continue uncovering cells that have no bombs as neigbors!!!
             if (neighborModel.NeighboringBombs == 0) {
-                neighborView.className = "empty field";
-                uncoverNeighboringFields(neighborModel, neighborView);
+                neighborView.className = "empty cell";
+                uncoverNeighboringCells(neighborModel, neighborView);
             }
         }
     }
 }
 
-//changes both title and subtitle
+/**
+ * Changes both title and subtitle
+ * @param {any} titleText
+ * @param {any} subtitleText
+ */
 function changeTitles(titleText, subtitleText) {
     let title = document.getElementById("title");
     let subtitle = document.getElementById("subtitle");
@@ -309,7 +350,10 @@ function changeTitles(titleText, subtitleText) {
     subtitle.textContent = subtitleText[Math.floor(Math.random() * subtitleText.length)];
 }
 
-//iterates through the entire board to check if all non bomb fields have been revealed (game is finished)
+/**
+ * Iterates through the entire board to check if all non bomb cells have been revealed (game will be finished then)
+ * @returns
+ */
 function isGameFinished() {
     if (_lifeAmount <= 0) {
         return true;
@@ -329,8 +373,11 @@ function isGameFinished() {
     return isFinished;
 }
 
-//reveals all bombs and disables events of all fields
-//will only be called when the game is finished by winning or losing
+/**
+ * Reveals all bombs and disables every event for all cells.
+ * Will only be called if the game is finished by winning or losing.
+ * @param {any} wonGame
+ */
 function revealBoard(wonGame) {
     _boardView.className = wonGame ? _boardView.className + "won" : _boardView.className;
     _lossStreakCount = wonGame ? 0 : _lossStreakCount + 1;
@@ -376,16 +423,19 @@ function setFlag(cellModel, cellView) {
         cellView.textContent = "";
     }
     //only add a flag if the amount of set flags is lesser than the amount of bombs
-    else if (_setFlags < _bombsInGF) {
+    else if (_setFlags < _bombCount) {
         _setFlags++;
         cellModel.IsFlagged = true;
         cellView.textContent = "🚩";
     }
 
-    _remainingFlags.textContent = `Remaining flags: ${_bombsInGF - _setFlags}/${_bombsInGF}`;
+    _remainingFlags.textContent = `Remaining flags: ${_bombCount - _setFlags}/${_bombCount}`;
 }
 
-//accepts the custom size if its valid and resets the board
+/**
+ * Accepts the custom size if its valid and resets the board.
+ * @returns
+ */
 function confirmCustomSize() {
     let customRow = parseInt(document.getElementById("customRow").value);
     let customColumn = parseInt(document.getElementById("customColumn").value);
@@ -399,7 +449,10 @@ function confirmCustomSize() {
     resetGame(this, customColumn, customRow);
 }
 
-//change the life amount and reset the game
+/**
+ * Changes the life amount and reset the game.
+ * @returns
+ */
 function confirmLifeAmount() {
     let userAmount = parseInt(document.getElementById("customLifes").value);
 
@@ -407,7 +460,6 @@ function confirmLifeAmount() {
         alert("Please choose a life amount between 1 and 99");
         return;
     }
-
 
     _originalLifeAmount = userAmount;
     _lifes.textContent = `Lifes: ${_lifeAmount}`;

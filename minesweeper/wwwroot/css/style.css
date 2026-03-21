@@ -1,13 +1,13 @@
-.empty.field {
+.empty.cell {
     background: #b182be;
 }
 
-.empty.field.won-game {
+.empty.cell.won-game {
     background: #82be8a;
 }
 
-.empty.field:hover,
-.bomb.field:hover, 
+.empty.cell:hover,
+.bomb.cell:hover, 
 .finished:hover {
     filter: none;
     cursor: default;
@@ -118,7 +118,7 @@ button:hover {
     cursor: pointer;
 }
 
-.field {
+.cell {
     width: 25px;
     height: 25px;
     font-size: 70%;
