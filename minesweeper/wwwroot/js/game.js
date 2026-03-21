@@ -26,7 +26,7 @@ const _fracNumBombs = 4;
 let _cellCount;
 
 
-$("#partialBoard").load("/Home/LoadBoard", {}, onServerResponse);
+$("#partialBoard").load("/Game/LoadBoard", { }, onServerResponse);
 $('.resetsGame').click(resetGame);
 
 //sets number input width to its placeholder text
@@ -47,7 +47,7 @@ function resetGame(sender, customColumn, customRow) {
 
     var column = customColumn === undefined ? $(this).data('column') : customColumn;
     var row = customRow === undefined ? $(this).data("row") : customRow;
-    $("#partialBoard").load("/Home/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
+    $("#partialBoard").load("/Game/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
 }
 
 function onServerResponse(response, stat, xhr) {
@@ -60,7 +60,7 @@ function onServerResponse(response, stat, xhr) {
         $('.resetsGame.resetbtn').click(resetGame);
     }
     else {
-        console.log("stat:", stat, "\nresp:", response, "\nxhr:", xhr);
+        console.warn("xhr:", xhr);
     }
 }
 
@@ -73,7 +73,7 @@ function refreshBoardElements() {
     _boardViewTableBody = _boardView.firstElementChild.firstElementChild;
 
     _bombCount = _boardModel.BombCount;
-    _cellCount = _boardModel.Rows * _boardModel.Columns;
+    _cellCount = _boardModel.CellCount;
 
     _setFlags = 0;
     _uncoveredCells = 0;

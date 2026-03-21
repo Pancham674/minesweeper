@@ -3,7 +3,8 @@ public class Board
 	int _rows;
 	int _columns;
 	int _bombCount;
-	
+	int _cellCount;
+
 	Random _rand = new Random();
 
 	Cell[][] _cells;
@@ -16,7 +17,9 @@ public class Board
 		_rows = _rand.Next(5, 15);
 		_columns = _rand.Next(5, 15);
 		_cells = new Cell[_columns][];
-		_bombCount = (int)Math.Round(_rows * _columns / 4f);
+
+		_cellCount = _rows * _columns;
+		_bombCount = (int)Math.Round(_cellCount / 4f);
 
 		InitCells();
 	}
@@ -26,7 +29,9 @@ public class Board
 		_columns = myColumns;
 		_rows = myRows;
 		_cells = new Cell[_columns][];
-		_bombCount = (int)Math.Round(_rows * _columns / 4f);
+		
+		_cellCount = _rows * _columns;
+		_bombCount = (int)Math.Round(_cellCount / 4f);
 	}
 
 	public void InitCells()
@@ -134,17 +139,9 @@ public class Board
 		return new Queue<bool>(bombList);			//yay
 	}
 
-	public int Rows
-	{
-		get => _rows; 
-		set => _rows = value; 
-	}
-
-	public int Columns
-	{
-		get => _columns;
-		set => _columns = value;
-	}
+	public int Rows	{ get => _rows; }
+	public int Columns { get => _columns; }
+	public int CellCount { get => _cellCount; }
 
 	public int BombCount
 	{
