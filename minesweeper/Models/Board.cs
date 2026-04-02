@@ -1,3 +1,5 @@
+using minesweeper.Models;
+
 public class Board
 {
 	int _rows;
@@ -8,6 +10,7 @@ public class Board
 	Random _rand = new Random();
 
 	Cell[][] _cells;
+	RoundSummary _summary;
 
 	/// <summary>
 	/// Standard constructor, will initialise a _rand size between 5 to 15 coluumns and rows
@@ -20,7 +23,8 @@ public class Board
 
 		_cellCount = _rows * _columns;
 		_bombCount = (int)Math.Round(_cellCount / 4f);
-
+		
+		_summary = new RoundSummary();
 		InitCells();
 	}
 
@@ -32,6 +36,9 @@ public class Board
 		
 		_cellCount = _rows * _columns;
 		_bombCount = (int)Math.Round(_cellCount / 4f);
+
+		_summary = new RoundSummary();
+		InitCells();
 	}
 
 	public void InitCells()
@@ -141,16 +148,12 @@ public class Board
 
 	public int Rows	{ get => _rows; }
 	public int Columns { get => _columns; }
-	public int CellCount { get => _cellCount; }
-
 	public int BombCount
 	{
 		get => _bombCount;
 		set => _bombCount = value; 
 	}
-
-	public Cell[][] Cells
-	{
-		get => _cells;
-	}
+	public int CellCount { get => _cellCount; }
+	public Cell[][] Cells { get => _cells; }
+	public RoundSummary Summary { get => _summary; }
 }

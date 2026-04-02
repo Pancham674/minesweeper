@@ -16,7 +16,6 @@ namespace minesweeper.Controllers
 			{   //rearrange cells!!
 				_board.InitCells();
 			}
-
 			return View(_board);
 		}
 
@@ -28,8 +27,6 @@ namespace minesweeper.Controllers
 		public IActionResult ResetGame(int myColumn, int myRow)
 		{
 			_board = new Board(myColumn, myRow);
-			_board.InitCells();
-
 			return PartialView("../_Board", _board);
 		}
 	}

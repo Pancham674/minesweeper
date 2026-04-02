@@ -1,5 +1,14 @@
 public class Cell
 {
+	int _row;
+	int _column;
+	int _neighboringBombs;
+	
+	bool _isRevealed;
+	bool _isExploded;
+	bool _isFlagged;
+	bool _isBomb;	
+	
 	public Cell(int myColumn, int myRow, bool myIsBomb)
 	{
 		_column = myColumn;
@@ -12,16 +21,6 @@ public class Cell
 
 		_neighboringBombs = -1;
 	}
-
-	int _row;
-	int _column;
-	int _neighboringBombs;
-	
-	bool _isRevealed;
-	bool _isExploded;
-	bool _isFlagged;
-	bool _isBomb;
-	
 
 	public int Row { get => _row; }
 	public int Column { get => _column;	}
