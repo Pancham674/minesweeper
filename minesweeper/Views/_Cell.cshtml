@@ -4,7 +4,7 @@
     data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
         @(
             Model.IsExploded ? "💥" :
-                !Model.IsRevealed && Model.IsBomb ? "💣" :
+                !Model.IsRevealed && Model.IsFlagged ? "🚩" :
                     Model.IsRevealed ? Model.NeighboringBombs : ""
         )
 </button>

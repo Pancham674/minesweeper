@@ -44,10 +44,24 @@ namespace minesweeper.Controllers
 			return PartialView("../_Cell", cell);
 		}
 
-		public IActionResult FlagCell(int myColumn, int myRow)
+		public string GetCell(int myColumn, int myRow)
 		{
-			//_board.FlagCell(myColumn, myRow);
-			return PartialView("../_Board", _board);
+			Cell cell = _board.Cells[myColumn, myRow];
+			string jsonData = System.Text.Json.JsonSerializer.Serialize(cell);
+			return jsonData;
+		}
+
+		public void CellChord(int myColumn, int myRow)
+		{
+			Cell cell = _board.Cells[myColumn, myRow];
+			_board.Chord(cell);
+		}
+
+		public IActionResult ToggleFlag(int myColumn, int myRow)
+		{
+			_board.ToggleFlag(myColumn, myRow);
+			Cell cell = _board.Cells[myColumn, myRow];
+			return PartialView("../_Cell", cell);
 		}
 
 		public IActionResult RevealBoardView()

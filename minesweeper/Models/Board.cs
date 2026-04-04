@@ -163,8 +163,6 @@ public class Board
 			//treat bomb as flag for chording
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
-			//cellView.onclick = () => { };
-			//cellView.oncontextmenu = (e) => { e.preventDefault() };
 
 			if (_lifeAmount <= 0)
 			{
@@ -173,16 +171,8 @@ public class Board
 				return;
 			}
 		}
-		// player wants to use chord
-		else if (myCell.IsRevealed)
-		{
-			Chord(myCell);
-			return;
-		}
 
 		myCell.IsRevealed = true;
-		//cellView.textContent = myCell.IsBomb ? "💣" : myCell.NeighboringBombs;
-		//cellView.className = myCell.NeighboringBombs == 0 ? "empty myCell" : "myCell";
 		//changeBoardProgress(myCell.IsBomb);
 
 		if (myCell.NeighboringBombs == 0)
@@ -214,12 +204,11 @@ public class Board
 			for (int cRow = myCell.Row - 1; cRow < myCell.Row + 2; cRow++)
 			{
 				if (cRow < 0 || cRow > _rows - 1)
-				{          //dont go out of the board
+				{   //dont go out of the board
 					continue;
 				}
 
 				Cell neighbor = _cells[cCol, cRow];
-				//const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
 
 				//ignore self
 				if (neighbor == myCell)
@@ -235,14 +224,15 @@ public class Board
 		//check if theres an equal or greater amount of flags placed around it
 		if (flaggedNeighbors >= myCell.NeighboringBombs)
 		{
-			//ignore uncovered and flagged cells
 			foreach (Cell neighbor in neighbors)
-			{
+			{	//ignore revealed and flagged cells
 				if (neighbor.IsRevealed || neighbor.IsFlagged)
 				{
-					//uncover neigbors
-					CellClicked(neighbor);
+					continue;
 				}
+
+				//uncover neigbors
+				CellClicked(neighbor);
 			}
 		}
 	}
@@ -300,6 +290,33 @@ public class Board
 			}
 		}
 
+	}
+
+	public void ToggleFlag(int myColumn, int myRow)
+	{
+		Cell cell = _cells[myColumn, myRow];
+
+		if (cell.IsRevealed)
+		{
+			return;
+		}
+
+		//remove the flag
+		if (cell.IsFlagged)
+		{
+			_setFlags--;
+			cell.IsFlagged = false;
+			//cellView.textContent = "";
+		}
+		//only add a flag if the amount of set flags is lesser than the amount of bombs
+		else if (_setFlags < _bombCount)
+		{
+			_setFlags++;
+			cell.IsFlagged = true;
+			//cellView.textContent = "🚩";
+		}
+
+		//_remainingFlags.textContent = `Remaining flags: ${ _bombCount - _setFlags}/${ _bombCount}`;
 	}
 
 	//muss ins js

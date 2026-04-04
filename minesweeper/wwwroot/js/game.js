@@ -2,7 +2,7 @@
  * Contains the tableBody element for all cellViews
  * do _boardViewTableBody.children[Row].cells[Column].children[0] to get the view of a specific cellModel 
  */
-let _boardViewTableBody;
+let _boardViewBody;
 let _boardModel;
 let _boardView;
 
@@ -62,9 +62,9 @@ function onServerResponse(response, stat, xhr) {
         refreshCellEvents();
         //refreshBoardElements();
 
-        _boardViewTableBody = document.getElementById("board");
-        _boardColumns = _boardViewTableBody.dataset.columns;
-        _boardRows = _boardViewTableBody.dataset.rows;
+        _boardViewBody = document.getElementById("board");
+        _boardColumns = _boardViewBody.dataset.columns;
+        _boardRows = _boardViewBody.dataset.rows;
 
         $('.resetsGame.resetbtn').click(resetGame);
     }
@@ -79,7 +79,7 @@ function onServerResponse(response, stat, xhr) {
 function refreshBoardElements() {
     _boardView = document.getElementById('board');
     _boardModel = JSON.parse(_boardView.dataset.board);
-    _boardViewTableBody = _boardView.firstElementChild.firstElementChild;
+    _boardViewBody = _boardView.firstElementChild.firstElementChild;
 
     _bombCount = _boardModel.BombCount;
     _cellCount = _boardModel.CellCount;
@@ -97,12 +97,12 @@ function refreshBoardElements() {
 
     _boardView.addEventListener('onCellLeftClick', e => {
         const { column, row } = e.detail;
-        onCellClicked(_boardModel.Cells[column][row], _boardViewTableBody.children[row].cells[column].children[0]);
+        onCellClicked(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
     });
 
     _boardView.addEventListener('onCellRightClick', e => {
         const { column, row } = e.detail;
-        setFlag(_boardModel.Cells[column][row], _boardViewTableBody.children[row].cells[column].children[0]);
+        setFlag(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
     });
 
     _boardView.addEventListener('onCellHover', e => {
@@ -174,37 +174,57 @@ function Chord(cellModel, cellView) {
 
     //loop around cellModels neigbors
     for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
-        if (cCol < 0 || cCol > _boardModel.Columns - 1) {           //dont go out of the board
+        if (cCol < 0 || cCol > _boardColumns - 1) {           //dont go out of the board
             continue;
         }
 
         for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
-            if (cRow < 0 || cRow > _boardModel.Rows - 1) {          //dont go out of the board
+            if (cRow < 0 || cRow > _boardRows - 1) {          //dont go out of the board
                 continue;
             }
 
-            const neighborModel = _boardModel.Cells[cCol][cRow];
-            const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
+            const partialNeighbor = _boardViewBody.children[cRow].children[cCol];
+            const neighborView = partialNeighbor.firstElementChild;
+            const neighborModel = JSON.parse(neighborView.dataset.model);
 
             //ignore self
-            if (neighborModel === cellModel) {
+            if (cellView === neighborView) {
                 continue;
             }
-            flaggedNeighbors = neighborModel.IsFlagged ? flaggedNeighbors + 1 : flaggedNeighbors;
-            neighbors.push({ model: neighborModel, view: neighborView });
+
+            flaggedNeighbors = neighborView.textContent.includes("💥") || neighborView.textContent.includes("🚩") ? flaggedNeighbors + 1 : flaggedNeighbors;
+            neighbors.push({ partialCell: partialNeighbor, model: neighborModel, view: neighborView });
         }
     }
 
     //check if theres an equal or greater amount of flags placed around it
     if (flaggedNeighbors >= cellModel.NeighboringBombs) {
-        neighbors.forEach(index => {
-            //ignore uncovered and flagged cells
-            if (index.model.IsRevealed || index.model.IsFlagged) {
+        neighbors.forEach(obj => {
+            //ignore bombs, revealed and flagged cells
+            if (obj.view.textContent.includes(obj.model.NeighboringBombs) || obj.view.textContent.includes("🚩") || obj.view.textContent.includes("💥")) {
                 return;
             }
 
+            obj.view.className = obj.model.NeighboringBombs == 0 ? "empty cell" : "cell";
+
+            if (obj.model.IsBomb) {
+                obj.view.textContent = "💥"
+                disableEvents(obj.partialCell);
+            }
+            else {
+                obj.view.textContent = obj.model.NeighboringBombs;
+            }
+
+            if (obj.model.NeighboringBombs == 0) {
+                console.log("neighbors were revealed too");
+                disableEvents(obj.partialCell);
+                uncoverNeighboringCells(obj.view, obj.model);
+            }
+
+            changeBoardProgress();
+
             //uncover neigbors
-            onCellClicked(index.model, index.view);
+            //onCellClicked(index.model, index.view);
         })
     }
 }
@@ -233,7 +253,7 @@ function onCellHover(cellModel) {
             }
 
             const neighborModel = _boardModel.Cells[cCol][cRow];
-            const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
+            const neighborView = _boardViewBody.children[cRow].cells[cCol].children[0];
 
             //ignore self, revealed cells and flagged cells since they wont be marked
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
@@ -270,7 +290,7 @@ function onCellHoverEnded(cellModel) {
             }
 
             const neighborModel = _boardModel.Cells[cCol][cRow];
-            const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
+            const neighborView = _boardViewBody.children[cRow].cells[cCol].children[0];
 
             //ignore self, revealed cells and flagged cells since they wont be marked
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
@@ -300,8 +320,8 @@ function changeBoardProgress(cellWasBomb) {
  * @param {any} cellModel
  * @param {any} partialCell
  */
-function uncoverNeighboringCells(partialCell, cellView, cellModel) {
-    //loop around partialCell neigbors
+function uncoverNeighboringCells(cellView, cellModel) {
+    //loop around cellView neigbors
     for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
         if (cCol < 0 || cCol > _boardColumns - 1) {           //dont go out of the board
             continue;
@@ -312,16 +332,16 @@ function uncoverNeighboringCells(partialCell, cellView, cellModel) {
                 continue;
             }
 
-            const partialNeighbor = _boardViewTableBody.children[cRow].children[cCol];
+            const partialNeighbor = _boardViewBody.children[cRow].children[cCol];
             const neighborView = partialNeighbor.firstElementChild;
             const neighborModel = JSON.parse(neighborView.dataset.model);
 
             //ignore revealed cells and self
-            if (neighborView.textContent.includes(neighborModel.NeighboringBombs) || partialNeighbor === partialCell) {
+            if (neighborView.textContent.includes(neighborModel.NeighboringBombs) || neighborView === cellView) {
                 continue;
             }
 
-            neighborView.className = "cell";
+            neighborView.className = neighborModel.NeighboringBombs == 0 ? "empty cell" : "cell";
             neighborView.textContent = neighborModel.NeighboringBombs;
             changeBoardProgress();
 
@@ -334,12 +354,8 @@ function uncoverNeighboringCells(partialCell, cellView, cellModel) {
 
             //continue uncovering cells that have no bombs as neigbors!!!
             if (neighborModel.NeighboringBombs == 0) {
-                $(partialNeighbor).off('click');
-                $(partialNeighbor).off('contextmenu');
-                $(partialNeighbor).on('contextmenu', (e) => { e.preventDefault() });
-
-                neighborView.className = "empty cell";
-                uncoverNeighboringCells(partialNeighbor, neighborView, neighborModel);
+                disableEvents(partialNeighbor);
+                uncoverNeighboringCells(neighborView, neighborModel);
             }
         }
     }
@@ -392,7 +408,7 @@ function revealBoard(wonGame) {
 
     _boardModel.Cells.forEach((row) => {
         row.forEach((cellModel) => {
-            const cellView = _boardViewTableBody.children[cellModel.Row].cells[cellModel.Column].children[0];
+            const cellView = _boardViewBody.children[cellModel.Row].cells[cellModel.Column].children[0];
 
             cellView.removeEventListener('click', dispatchLeftClick);
             cellView.removeEventListener('contextmenu', dispatchRightClick);
@@ -427,13 +443,11 @@ function setFlag(cellModel, cellView) {
     //remove the flag
     if (cellModel.IsFlagged) {
         _setFlags--;
-        cellModel.IsFlagged = false;
         cellView.textContent = "";
     }
     //only add a flag if the amount of set flags is lesser than the amount of bombs
     else if (_setFlags < _bombCount) {
         _setFlags++;
-        cellModel.IsFlagged = true;
         cellView.textContent = "🚩";
     }
 
