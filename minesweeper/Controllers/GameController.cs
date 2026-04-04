@@ -30,7 +30,7 @@ namespace minesweeper.Controllers
 			return PartialView("../_Board", _board);
 		}
 
-		public IActionResult CellClicked(int myColumn, int myRow)
+		public void CellClicked(int myColumn, int myRow)
 		{
 			_board.CellClicked(myColumn, myRow);
 			//bool isGameWon = _board.IsGameWon(); 
@@ -40,21 +40,8 @@ namespace minesweeper.Controllers
 				//return RedirectToAction("RevealBoardView");
 			}
 
-			Cell cell = _board.Cells[myColumn, myRow];
-			return PartialView("../_Cell", cell);
-		}
-
-		public string GetCell(int myColumn, int myRow)
-		{
-			Cell cell = _board.Cells[myColumn, myRow];
-			string jsonData = System.Text.Json.JsonSerializer.Serialize(cell);
-			return jsonData;
-		}
-
-		public void CellChord(int myColumn, int myRow)
-		{
-			Cell cell = _board.Cells[myColumn, myRow];
-			_board.Chord(cell);
+			//Cell cell = _board.Cells[myColumn, myRow];
+			//return PartialView("../_Cell", cell);
 		}
 
 		public IActionResult ToggleFlag(int myColumn, int myRow)
@@ -62,12 +49,6 @@ namespace minesweeper.Controllers
 			_board.ToggleFlag(myColumn, myRow);
 			Cell cell = _board.Cells[myColumn, myRow];
 			return PartialView("../_Cell", cell);
-		}
-
-		public IActionResult RevealBoardView()
-		{
-			//_board.RevealCell(myColumn, myRow);
-			return PartialView("../_Board", _board);
 		}
 	}
 }

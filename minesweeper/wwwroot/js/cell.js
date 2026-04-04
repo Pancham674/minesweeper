@@ -1,109 +1,77 @@
-﻿/**
+﻿function refreshResetBtn() {
+    $('.resetsGame.resetbtn').click(function () {
+        console.log("Game has been reset");
+        resetGame(this, $(this).data("column"), $(this).data("row"));
+    });
+}
+
+/**
  * Adds events to .partialCell divs insetad of the cellView/button itself, so those events dont have to be readded again after a reload
  */
 function refreshCellEvents() {
-    $('.partialCell').each(function () {    //always refresh cellView and -Model cuz we work with its updated data
-        $(this).on({
+    $('#partialBoard .partialCell').each(function () {
+        let partialCell = this;
+        let cellView = this.firstElementChild;
+        let cellModel = JSON.parse(cellView.dataset.model);
+
+        if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
+            cellView.className = "empty cell";
+            $(partialCell).contextmenu((e) => { e.preventDefault(); })
+            return;
+        }
+        else if (cellModel.IsExploded) {
+            $(partialCell).contextmenu((e) => { e.preventDefault(); })
+            return;
+        }
+
+        $(partialCell).on({
             click: function () {
-                let cellView = this.firstElementChild;
-                let cellModel = JSON.parse(cellView.dataset.model);
-
-                //$.get('/Game/GetCell', { myColumn: column, myRow: row }, function (data, status) {
-                //    console.log("GetCell returned", status);
-                //    if (status !== 'success') {
-                //        return;
-                //    }
-
-                //    cellModel = JSON.parse(data);
-                //});
-
                 if (cellModel.IsFlagged) {
-                    console.log("flagged cell in c", cellModel.Column, " r", cellModel.Row, " was ignored")
-                    return;
-                }
-                else if (cellModel.IsBomb) {
-                    disableEvents(this);
-
-                    //if (_lifeAmount <= 0) {
-                    //    revealBoard(false);
-                    //    changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
-                    //    return;
-                    //}
-                }
-                // check if cell got revealed in the view (player wants to use chord)
-                else if (cellView.textContent.includes(cellModel.NeighboringBombs)) {
-                    $.post('/Game/CellChord', { myColumn: cellModel.Column, myRow: cellModel.Row }, function (data, status) {
-                        console.log("chord in c", cellModel.Column, " r", cellModel.Row, "was", status);
-                        if (status !== 'success') {
-                            console.warn(data);
-                        }
-
-                        Chord(cellModel, cellView);
-                    });
+                    console.log("dont l-click that flag cell now....");
                     return;
                 }
 
-                //reload the cell within partialCell to show current status
-                $(this).load('/Game/CellClicked', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status, xhr) => {
-                    console.log("cell on c", cellModel.Column, " r", cellModel.Row, "was clicked: ", status);
-                    if (status != 'success') {
-                        console.warn(xhr);
+                $.post('/Game/CellClicked', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status) => {
+                    console.log("cell in c", cellModel.Column, " r", cellModel.Row, "clicked, was: ", status);
+                    if (status !== "success") {
                         return;
                     }
 
-                    //refresh those elements too
-                    cellView = this.firstElementChild;
-                    cellModel = JSON.parse(cellView.dataset.model);
+                    $('#partialBoard').load('/Game/LoadBoard', function (data, status, xhr) {
+                        console.log("board has been updated, was ", status);
 
-                    if (cellModel.NeighboringBombs == 0) {
-                        console.log("neighbors were revealed too");
-                        disableEvents(this);
-                        cellView.className = "empty cell";        //wont change if neighborView is used...
-                        uncoverNeighboringCells(cellView, cellModel);
-                    }
+                        if (status !== "success") {
+                            console.log(xhr);
+                            return;
+                        }
 
-                    changeBoardProgress();
+                        refreshResetBtn();
+                        refreshCellEvents();            //partialBoard has been reloaded, add every event to each partial cell again.
+                    });
                 });
             },
 
             contextmenu: function (e) {
                 e.preventDefault();
-                const cellView = this.firstElementChild;
-                const cellModel = JSON.parse(cellView.dataset.model);
 
-                if (cellView.textContent.includes(cellModel.NeighboringBombs) || cellView.textContent.includes("💥")) {
-                    console.log("Cant flag cell in c", cellModel.Column, " r", cellModel.Row, "was because its revealed");
-                    return;
-                }
-
-                //reload the cell within partialCell to show current status
-                $(this).load('/Game/ToggleFlag', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status, xhr) => {
+                $(partialCell).load('/Game/ToggleFlag', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status, xhr) => {
                     console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
                     if (status != 'success') {
                         console.warn(xhr);
                         return;
                     }
+                    cellView = partialCell.firstElementChild;
+                    cellModel = JSON.parse(cellView.dataset.model);
                 });
             },
 
             mouseenter: function () {
-                const cellView = this.firstElementChild;
-                const cellModel = JSON.parse(cellView.dataset.model);
-
-
+                onCellHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
             },
 
             mouseleave: function () {
-                const cellView = this.firstElementChild;
-                const cellModel = JSON.parse(cellView.dataset.model);
-
-
+                onCellHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
             }
         });
     });
-};
-
-function disableEvents(partialCell) {
-    $(partialCell).off('click contextmenu mouseenter mouseleave');
-    $(partialCell).on('contextmenu', (e) => { e.preventDefault() });
 }

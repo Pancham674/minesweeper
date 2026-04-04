@@ -44,6 +44,7 @@ public class Board
 		_bombCount = (int)Math.Round(_cellCount / 4f);
 
 		_summary = new RoundSummary();
+		_setFlags = 0;
 		InitCells();
 	}
 
@@ -171,6 +172,11 @@ public class Board
 				return;
 			}
 		}
+		else if (myCell.IsRevealed)
+		{
+			Chord(myCell);
+			return;
+		}
 
 		myCell.IsRevealed = true;
 		//changeBoardProgress(myCell.IsBomb);
@@ -217,7 +223,7 @@ public class Board
 				}
 
 				flaggedNeighbors = neighbor.IsFlagged ? flaggedNeighbors + 1 : flaggedNeighbors;
-				neighbors.Append(neighbor);
+				neighbors.Add(neighbor);
 			}
 		} 
 		
@@ -238,13 +244,7 @@ public class Board
 	}
 
 	void UncoverNeighboringCells(Cell myCell)
-	{
-		//cellView.onclick = () => { };
-		//cellView.oncontextmenu = (cursor) => {
-		//	cursor.preventDefault();
-		//};
-
-		//loop around cellModels neigbors
+	{	//loop around cellModels neigbors
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
 		{
 			if (cCol < 0 || cCol > _columns - 1)
@@ -260,7 +260,6 @@ public class Board
 				}
 
 				Cell neighbor = _cells[cCol, cRow];
-				//const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
 
 				//ignore self and uncovered cells
 				if (neighbor == myCell || neighbor.IsRevealed)
@@ -269,8 +268,6 @@ public class Board
 				}
 
 				neighbor.IsRevealed = true;
-				//neighborView.className = "cell";
-				//neighborView.textContent = neighbor.NeighboringBombs;
 				//changeBoardProgress();
 
 				//give player their flag back
@@ -284,7 +281,6 @@ public class Board
 				//continue uncovering cells that have no bombs as neigbors!!!
 				if (neighbor.NeighboringBombs == 0)
 				{
-					//neighborView.className = "empty cell";
 					UncoverNeighboringCells(neighbor);
 				}
 			}
@@ -306,7 +302,6 @@ public class Board
 		{
 			_setFlags--;
 			cell.IsFlagged = false;
-			//cellView.textContent = "";
 		}
 		//only add a flag if the amount of set flags is lesser than the amount of bombs
 		else if (_setFlags < _bombCount)
