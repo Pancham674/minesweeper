@@ -25,15 +25,19 @@ let _setFlags;
 const _fracNumBombs = 4;
 let _cellCount;
 
+let _boardColumns;
+let _boardRows;
 
-$("#partialBoard").load("/Game/LoadBoard", { }, onServerResponse);
-$('.resetsGame').click(resetGame);
+$(document).ready(function() {
+    $("#partialBoard").load("/Game/LoadBoard", { }, onServerResponse);
+    $('.resetsGame').click(resetGame);
 
-//sets number input width to its placeholder text
-let inpNums = document.querySelectorAll('input');
-for (i = 0; i < inpNums.length; i++) {
-    inpNums[i].setAttribute('size', inpNums[i].getAttribute('placeholder').length);
-}
+    //sets number input width to its placeholder text
+    let inpNums = document.querySelectorAll('input');
+    for (i = 0; i < inpNums.length; i++) {
+        inpNums[i].setAttribute('size', inpNums[i].getAttribute('placeholder').length);
+    }
+})
 
 /**
 * Will reset the game though interaction with server.
@@ -56,7 +60,12 @@ function onServerResponse(response, stat, xhr) {
     if (stat == "success") {
         changeTitlesOnLoss();
         refreshCellEvents();
-        refreshBoardElements();
+        //refreshBoardElements();
+
+        _boardViewTableBody = document.getElementById("board");
+        _boardColumns = _boardViewTableBody.dataset.columns;
+        _boardRows = _boardViewTableBody.dataset.rows;
+
         $('.resetsGame.resetbtn').click(resetGame);
     }
     else {
@@ -289,49 +298,48 @@ function changeBoardProgress(cellWasBomb) {
 /**
  * Uncovers neighbors if the current cell has no neigboring bombs, aka a 0.
  * @param {any} cellModel
- * @param {any} cellView
+ * @param {any} partialCell
  */
-function uncoverNeighboringCells(cellModel, cellView) {
-    cellView.onclick = () => { };
-    cellView.oncontextmenu = (cursor) => {
-        cursor.preventDefault();
-    };
-
-    //loop around cellModels neigbors
+function uncoverNeighboringCells(partialCell, cellView, cellModel) {
+    //loop around partialCell neigbors
     for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
-        if (cCol < 0 || cCol > _boardModel.Columns - 1) {           //dont go out of the board
+        if (cCol < 0 || cCol > _boardColumns - 1) {           //dont go out of the board
             continue;
         }
 
         for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
-            if (cRow < 0 || cRow > _boardModel.Rows - 1) {          //dont go out of the board
+            if (cRow < 0 || cRow > _boardRows - 1) {          //dont go out of the board
                 continue;
             }
 
-            const neighborModel = _boardModel.Cells[cCol][cRow];
-            const neighborView = _boardViewTableBody.children[cRow].cells[cCol].children[0];
+            const partialNeighbor = _boardViewTableBody.children[cRow].children[cCol];
+            const neighborView = partialNeighbor.firstElementChild;
+            const neighborModel = JSON.parse(neighborView.dataset.model);
 
-            //ignore self and uncovered cells
-            if (neighborModel === cellModel || neighborModel.IsRevealed) {
+            //ignore revealed cells and self
+            if (neighborView.textContent.includes(neighborModel.NeighboringBombs) || partialNeighbor === partialCell) {
                 continue;
             }
 
-            neighborModel.IsRevealed = true;
             neighborView.className = "cell";
             neighborView.textContent = neighborModel.NeighboringBombs;
             changeBoardProgress();
 
             //give player their flag back
-            if (neighborModel.IsFlagged) {
-                _setFlags--;
-                neighborModel.IsFlagged = false;
-                _remainingFlags.textContent = `Remaining flags: ${_bombCount - _setFlags}/${_bombCount}`;
-            }
+            //if (neighborModel.IsFlagged) {
+            //    _setFlags--;
+            //    neighborModel.IsFlagged = false;
+            //    _remainingFlags.textContent = `Remaining flags: ${_bombCount - _setFlags}/${_bombCount}`;
+            //}
 
             //continue uncovering cells that have no bombs as neigbors!!!
             if (neighborModel.NeighboringBombs == 0) {
+                $(partialNeighbor).off('click');
+                $(partialNeighbor).off('contextmenu');
+                $(partialNeighbor).on('contextmenu', (e) => { e.preventDefault() });
+
                 neighborView.className = "empty cell";
-                uncoverNeighboringCells(neighborModel, neighborView);
+                uncoverNeighboringCells(partialNeighbor, neighborView, neighborModel);
             }
         }
     }

@@ -29,5 +29,31 @@ namespace minesweeper.Controllers
 			_board = new Board(myColumn, myRow);
 			return PartialView("../_Board", _board);
 		}
+
+		public IActionResult CellClicked(int myColumn, int myRow)
+		{
+			_board.CellClicked(myColumn, myRow);
+			//bool isGameWon = _board.IsGameWon(); 
+
+			if (_board.IsGameFinished())
+			{
+				//return RedirectToAction("RevealBoardView");
+			}
+
+			Cell cell = _board.Cells[myColumn, myRow];
+			return PartialView("../_Cell", cell);
+		}
+
+		public IActionResult FlagCell(int myColumn, int myRow)
+		{
+			//_board.FlagCell(myColumn, myRow);
+			return PartialView("../_Board", _board);
+		}
+
+		public IActionResult RevealBoardView()
+		{
+			//_board.RevealCell(myColumn, myRow);
+			return PartialView("../_Board", _board);
+		}
 	}
 }
