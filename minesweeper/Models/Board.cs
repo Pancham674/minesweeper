@@ -10,8 +10,9 @@ public class Board
 
 	static int _originalLifeCount;
 	int _lifeCount;
-	
-	bool _roundStarted;
+	int _lossStreakCount;
+
+	bool _hasRoundStarted;
 	int _setFlagCount;
 	long _revealedCellsCount;
 
@@ -62,6 +63,7 @@ public class Board
 		_lifeCount = _originalLifeCount;
 		_setFlagCount = 0;
 		_revealedCellsCount = 0;
+		_hasRoundStarted = false;
 	}
 
 	public void InitCells()
@@ -162,7 +164,7 @@ public class Board
 
 	public void CellClicked(int myColumn, int myRow)
 	{
-		_roundStarted = true;
+		_hasRoundStarted = true;
 		CellClicked(_cells[myColumn, myRow]);
 	}
 
@@ -349,6 +351,7 @@ public class Board
 	{
 		if (_lifeCount < 0)
 		{
+			_lossStreakCount++;
 			return false;
 		}
 
@@ -363,6 +366,7 @@ public class Board
 				break;
 			}
 		}
+		_lossStreakCount = isFinished ? 0 : _lossStreakCount + 1;
 		return isFinished;
 	}
 
@@ -377,7 +381,8 @@ public class Board
 	public int SetFlagCount { get => _setFlagCount; }
 	public int LifeCount { get => _lifeCount; }
 	public long RevealedCellCount { get => _revealedCellsCount; }
-
+	public int LossStreakCount { get => _lossStreakCount; }
+	public bool HasRoundStarted { get => _hasRoundStarted; }
 	[JsonIgnore]
 	public Cell[,] Cells { get => _cells; }
 	

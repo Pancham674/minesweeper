@@ -46,6 +46,11 @@ namespace minesweeper.Controllers
 			return _board.SetFlagCount;
 		}
 
+		public int GetLossStreakCount()
+		{
+			return _board.LossStreakCount;
+		}
+
 		public bool GetIsFinished()
 		{
 			return _board.IsGameFinished();
@@ -54,6 +59,11 @@ namespace minesweeper.Controllers
 		public bool GetIsWon()
 		{
 			return _board.IsGameWon();
+		}
+
+		public bool GetHasRoundStarted()
+		{
+			return _board.HasRoundStarted;
 		}
 	}
 }

@@ -1,11 +1,10 @@
 ﻿let _boardModel;
+let _boardIsRoundFinished = false;
+
 let _remainingFlagsStat = $("#remainingFlags")[0];
 let _boardProgressStat = $("#boardProgress")[0];
 let _lifesStat = $("#lifes")[0];
 
-
-let _lossStreakCount = 0;
-let _roundStarted;
 
 $(document).ready(function() {
     getPartialBoard("GetBoard");
@@ -30,27 +29,47 @@ $(document).ready(function() {
 })
 
 /**
-* Will reset the game though interaction with server.
-* customColumn and -Row will be defined if this function gets called from the user defined custom size option.
+* Will reset the game though communication with server.
+* If customColumn and -Row are undefined then the data will be avaiable within sender.
+* Will not change life count stat if its undefined.
 */
 function resetGame(sender, customColumn, customRow, customLifesCount) {
-    if (_roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
-        "\nAre you sure you want to continue?")) {
-        return;
-    }
+    $.get("/Game/GetHasRoundStarted", function (data, status) {
+        if (status !== "success") {
+            console.warn(data);
+            return;
+        }
 
-    console.log("Game has been reset");
-    var column = customColumn === undefined ? $(sender).data("column") : customColumn;
-    var row = customRow === undefined ? $(sender).data("row") : customRow;
+        if ((data && !_boardIsRoundFinished) && !confirm("Applying new settings will also reset the current round." +
+            "\nAre you sure you want to continue?")) {
+            return;
+        }
 
-    if (!customLifesCount) {
-        getPartialBoard("ResetGame", column, row);
-        return;
-    }
+        console.log("Game has been reset");
+        var column = customColumn === undefined ? $(sender).data("column") : customColumn;
+        var row = customRow === undefined ? $(sender).data("row") : customRow;
 
-    getPartialBoard("ResetGameAndChangeLifes", column, row, customLifesCount);
+        if (!customLifesCount) {
+            getPartialBoard("ResetGame", column, row);
+            return;
+        }
+
+        getPartialBoard("ResetGameAndChangeLifes", column, row, customLifesCount);
+    });
 }
 
+
+/**
+ * Always loads the #partialBoard element with a new Board.
+ * Additional things happen if these specified parameters are defined:
+ *    - column & row: resets with custom size
+ *    - customLifeCount: resets with different life count, column and row are required.
+ * endPoint is required for all.
+ * @param {any} endPoint
+ * @param {any} column
+ * @param {any} row
+ * @param {any} customLifesCount
+ */
 function getPartialBoard(endPoint, column, row, customLifesCount) {
     $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (response, stat, xhr) {
         console.log("Server response was", stat);
@@ -59,11 +78,10 @@ function getPartialBoard(endPoint, column, row, customLifesCount) {
             console.warn("xhr:", xhr);
             return;
         }
-        _boardModel = JSON.parse($("#board")[0].dataset.model);
 
-        changeTitlesOnLoss();
         refreshCellEvents();
-        refreshBoardStats();
+        refreshBoardStats($("#board")[0]);
+        changeTitlesOnLoss();
     });
 }
 
@@ -151,7 +169,6 @@ function confirmLifeAmount() {
         return;
     }
 
-    changeTitlesOnLoss();
     resetGame(this, _boardModel.Columns, _boardModel.Rows, customLifes.value);
 }
 
@@ -169,11 +186,20 @@ function changeTitles(titleText, subtitleText) {
 }
 
 function changeTitlesOnLoss() {
-    if (_lossStreakCount == 0) {
-        return;
-    }
+    $.get("/Game/GetLossStreakCount", function (data, status) {
+        console.log("Retrieving LossStreakCount was "+ status);
+        if (status !== "success") {
+            return;
+        }
 
-    changeTitles("Good luck!", [_lossStreakCount + 1 + (_lossStreakCount + 1 == 1 ? "st " :
-        _lossStreakCount + 1 == 2 ? "nd " :
-            _lossStreakCount + 1 == 3 ? "rd " : "th ") + "try's a charm"]);
+        if (data == 0) {
+            return;
+        }
+
+        changeTitles("Good luck!", [data + 1 + (data + 1 == 1 ? "st " :
+                                                data + 1 == 2 ? "nd " :
+                                                data + 1 == 3 ? "rd " :
+                                                                "th ") +
+                                                "try's a charm"]);
+    });
 }

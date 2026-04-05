@@ -21,7 +21,7 @@ function refreshCellEvents() {
                 }
 
                 $.post('/Game/CellClicked', { myColumn: cellModel.Column, myRow: cellModel.Row }, function (data, status) {
-                    console.log("cell in c", cellModel.Column, " r", cellModel.Row, "clicked, was: ", status);
+                    console.log("cell in c", cellModel.Column, " r", cellModel.Row, " clicked, was: "+ status);
                     if (status !== "success") {
                         return;
                     }
@@ -34,30 +34,31 @@ function refreshCellEvents() {
                             console.warn(xhr);
                             return;
                         }
-                        refreshBoardStats(this.children[1]);
+                        refreshBoardStats(this.children[0]);
 
                         //check if round is finished
-                        $.get('/Game/GetIsFinished', function (data, status) {
+                        $.get('/Game/GetIsFinished', function (isFinished, status) {
                             if (status !== "success") {
-                                console.warn(data);
+                                console.warn(isFinished);
                                 return;
                             }
 
-                            if (data) {     //check if round was won
-                                $.get("/Game/GetIsWon", function (data, status) {
+                            _boardIsRoundFinished = isFinished;
+                            if (isFinished) {     //check if round was won
+                                $.get("/Game/GetIsWon", function (isRoundWon, status) {
                                     if (status !== "success") {
-                                        console.warn(data);
+                                        console.warn(isRoundWon);
                                         return;
                                     }
 
-                                    //add one or two classes for finishing the round, either by losing or winning
+                                    //add one or two classes for finishing the round, either from losing or winning
                                     $(".partialCell > button").each(function () {
-                                        currentCellModel = JSON.parse(this.dataset.model);
-                                        if (currentCellModel.IsRevealed && currentCellModel.NeighboringBombs == 0) {
+                                        cellModel = JSON.parse(this.dataset.model);
+                                        if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
                                             this.className = "empty cell";
                                         }
 
-                                        $(this).addClass(data ? "won-game finished" : "finished");
+                                        $(this).addClass(isRoundWon ? "won-game finished" : "finished");
                                     });
                                 });
                                 return;
