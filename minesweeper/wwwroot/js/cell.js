@@ -14,6 +14,7 @@ function refreshCellEvents() {
         let cellView = this.firstElementChild;
         let cellModel = JSON.parse(cellView.dataset.model);
 
+        //change class if its no longer interactable (0-cell) and remove flagging
         if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
             cellView.className = "empty cell";
             $(partialCell).contextmenu((e) => { e.preventDefault(); })
@@ -66,11 +67,11 @@ function refreshCellEvents() {
             },
 
             mouseenter: function () {
-                onCellHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
+                ToggleClassOnHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
             },
 
             mouseleave: function () {
-                onCellHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
+                ToggleClassOnHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
             }
         });
     });

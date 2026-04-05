@@ -29,8 +29,6 @@ public class Board
 		_bombCount = (int)Math.Round(_cellCount / 4f);
 
 		_summary = new RoundSummary();
-		_lifeAmount = 1;
-		_setFlags = 0;
 		InitCells();
 	}
 
@@ -44,12 +42,12 @@ public class Board
 		_bombCount = (int)Math.Round(_cellCount / 4f);
 
 		_summary = new RoundSummary();
-		_setFlags = 0;
 		InitCells();
 	}
 
 	public void InitCells()
 	{
+		ResetUserStats();
 		Queue<bool> bombList = InitBombList();
 
 		for (int c = 0; c < _columns; c++)
@@ -194,6 +192,12 @@ public class Board
 		}
 	}
 
+	void ResetUserStats()
+	{
+		_lifeAmount = 1;
+		_setFlags = 0;
+	}
+
 	public void Chord(Cell myCell)
 	{
 		int flaggedNeighbors = 0;
@@ -285,7 +289,6 @@ public class Board
 				}
 			}
 		}
-
 	}
 
 	public void ToggleFlag(int myColumn, int myRow)
@@ -308,7 +311,6 @@ public class Board
 		{
 			_setFlags++;
 			cell.IsFlagged = true;
-			//cellView.textContent = "🚩";
 		}
 
 		//_remainingFlags.textContent = `Remaining flags: ${ _bombCount - _setFlags}/${ _bombCount}`;

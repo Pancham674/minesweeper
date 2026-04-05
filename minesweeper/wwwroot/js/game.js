@@ -119,6 +119,111 @@ function refreshBoardElements() {
 }
 
 /**
+ * Highlights the neigbors of an uncovered cell by adding a classname. The uncovered cell must be hovered on.
+ * Intended to help the player see the neighbors more directly, especially for chording.
+ * @param {any} cellModel
+ * @returns
+ */
+function ToggleClassOnHoverStartEnd(cellModel, boardViewBody) {
+    //only neighbors of uncovered cells should be marked
+    if (!cellModel.IsRevealed) {
+        return;
+    }
+
+    //loop around cellModels neigbors
+    for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
+        if (cCol < 0 || cCol > _boardColumns - 1) {           //dont go out of the board
+            continue;
+        }
+
+        for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
+            if (cRow < 0 || cRow > _boardRows - 1) {          //dont go out of the board
+                continue;
+            }
+
+            const neighborView = boardViewBody.children[cRow].children[cCol].firstElementChild;
+            const neighborModel = JSON.parse(neighborView.dataset.model);
+
+            //ignore self, revealed cells and flagged cells since they wont be marked
+            if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
+                continue;
+            }
+
+            $(neighborView).toggleClass("hovering");
+        }
+    }
+}
+
+/**
+ * Accepts the custom size if its valid and resets the board.
+ * @returns
+ */
+function confirmCustomSize() {
+    let customRow = parseInt(document.getElementById("customRow").value);
+    let customColumn = parseInt(document.getElementById("customColumn").value);
+
+    if (customRow < 4 || customRow > 100 || isNaN(customRow) ||
+        customColumn < 4 || customColumn > 100 || isNaN(customColumn)) {
+        alert("Please choose a value between 5 and 99.");
+        return;
+    }
+
+    resetGame(this, customColumn, customRow);
+}
+
+/**
+ * Changes the life amount and reset the game.
+ * @returns
+ */
+function confirmLifeAmount() {
+    let userAmount = parseInt(document.getElementById("customLifes").value);
+
+    if (userAmount > 99 || userAmount < 1 || isNaN(userAmount)) {
+        alert("Please choose a life amount between 1 and 99");
+        return;
+    }
+
+    _originalLifeAmount = userAmount;
+    _lifes.textContent = `Lifes: ${_lifeAmount}`;
+
+    changeTitlesOnLoss();
+    resetGame(this, _boardModel.Columns, _boardModel.Rows);
+}
+
+/**
+ * Whenever the progress changes this function will update the amount of covered cells inn the UI.
+ * @param {any} cellWasBomb
+ */
+function changeBoardProgress(cellWasBomb) {
+    if (!cellWasBomb) {
+        _uncoveredCells++;
+        _boardProgress.textContent = `Covered cells: ${(_cellCount - _bombCount) - _uncoveredCells}/${_cellCount - _bombCount}`;
+    }
+}
+/**
+ * Changes both title and subtitle
+ * @param {any} titleText
+ * @param {any} subtitleText
+ */
+function changeTitles(titleText, subtitleText) {
+    let title = document.getElementById("title");
+    let subtitle = document.getElementById("subtitle");
+
+    title.textContent = titleText;
+    subtitle.textContent = subtitleText[Math.floor(Math.random() * subtitleText.length)];
+}
+
+function changeTitlesOnLoss() {
+    if (_lossStreakCount == 0) {
+        return;
+    }
+
+    changeTitles("Good luck!", [_lossStreakCount + 1 + (_lossStreakCount + 1 == 1 ? "st " :
+        _lossStreakCount + 1 == 2 ? "nd " :
+            _lossStreakCount + 1 == 3 ? "rd " : "th ") + "try's a charm"]);
+}
+
+/**
  * Will reveal the clicked cell and performs a specific action based on its attributes
 */
 //function onCellClicked(cellModel, cellView) {
@@ -231,45 +336,6 @@ function refreshBoardElements() {
 //    }
 //}
 
-/**
- * Highlights the neigbors of an uncovered cell by adding a classname. The uncovered cell must be hovered on.
- * Intended to help the player see the neighbors more directly, especially for chording.
- * @param {any} cellModel
- * @returns
- */
-function onCellHoverStartEnd(cellModel, boardViewBody) {
-    //only neighbors of uncovered cells should be marked
-    if (!cellModel.IsRevealed) {
-        return;
-    }
-
-    //loop around cellModels neigbors
-    for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
-        if (cCol < 0 || cCol > _boardColumns -1) {           //dont go out of the board
-            continue;
-        }
-
-        for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
-            if (cRow < 0 || cRow > _boardRows -1) {          //dont go out of the board
-                continue;
-            }
-
-            const neighborView = boardViewBody.children[cRow].children[cCol].firstElementChild;
-            const neighborModel = JSON.parse(neighborView.dataset.model);
-
-            //ignore self, revealed cells and flagged cells since they wont be marked
-            if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
-                continue;
-            }
-
-            $(neighborView).toggleClass("hovering");
-
-            //if (!neighborView.className.includes(" hovering")) {
-            //    neighborView.className += " hovering";
-            //}
-        }
-    }
-}
 
 /**
 * Removes a classname from the neighbors of an uncovered cell whenever the hover ends.
@@ -308,16 +374,7 @@ function onCellHoverStartEnd(cellModel, boardViewBody) {
 //    }
 //}
 
-/**
- * Whenever the progress changes this function will update the amount of covered cells inn the UI.
- * @param {any} cellWasBomb
- */
-function changeBoardProgress(cellWasBomb) {
-    if (!cellWasBomb) {
-        _uncoveredCells++;
-        _boardProgress.textContent = `Covered cells: ${(_cellCount - _bombCount) - _uncoveredCells}/${_cellCount - _bombCount}`;
-    }
-}
+
 
 /**
  * Uncovers neighbors if the current cell has no neigboring bombs, aka a 0.
@@ -365,41 +422,29 @@ function changeBoardProgress(cellWasBomb) {
 //    }
 //}
 
-/**
- * Changes both title and subtitle
- * @param {any} titleText
- * @param {any} subtitleText
- */
-function changeTitles(titleText, subtitleText) {
-    let title = document.getElementById("title");
-    let subtitle = document.getElementById("subtitle");
-
-    title.textContent = titleText;
-    subtitle.textContent = subtitleText[Math.floor(Math.random() * subtitleText.length)];
-}
 
 /**
  * Iterates through the entire board to check if all non bomb cells have been revealed (game will be finished then)
  * @returns
  */
-function isGameFinished() {
-    if (_lifeAmount <= 0) {
-        return true;
-    }
+//function isGameFinished() {
+//    if (_lifeAmount <= 0) {
+//        return true;
+//    }
 
-    let isFinished = true;
-    _boardModel.Cells.forEach((row) => {
-        row.forEach((cellModel) => {
-            //ignore bombs since they shouldnt be uncovered to win
-            if (cellModel.IsBomb) {
-                return;
-            }
-            isFinished = cellModel.IsRevealed ? isFinished : false;
-        });
-    });
+//    let isFinished = true;
+//    _boardModel.Cells.forEach((row) => {
+//        row.forEach((cellModel) => {
+//            //ignore bombs since they shouldnt be uncovered to win
+//            if (cellModel.IsBomb) {
+//                return;
+//            }
+//            isFinished = cellModel.IsRevealed ? isFinished : false;
+//        });
+//    });
 
-    return isFinished;
-}
+//    return isFinished;
+//}
 
 /**
  * Reveals all bombs and disables every event for all cells.
@@ -458,48 +503,3 @@ function isGameFinished() {
 //    _remainingFlags.textContent = `Remaining flags: ${_bombCount - _setFlags}/${_bombCount}`;
 //}
 
-/**
- * Accepts the custom size if its valid and resets the board.
- * @returns
- */
-function confirmCustomSize() {
-    let customRow = parseInt(document.getElementById("customRow").value);
-    let customColumn = parseInt(document.getElementById("customColumn").value);
-
-    if (customRow < 4 || customRow > 100 || isNaN(customRow) ||
-        customColumn < 4 || customColumn > 100 || isNaN(customColumn)) {
-        alert("Please choose a value between 5 and 99.");
-        return;
-    }
-
-    resetGame(this, customColumn, customRow);
-}
-
-/**
- * Changes the life amount and reset the game.
- * @returns
- */
-function confirmLifeAmount() {
-    let userAmount = parseInt(document.getElementById("customLifes").value);
-
-    if (userAmount > 99 || userAmount < 1 || isNaN(userAmount)) {
-        alert("Please choose a life amount between 1 and 99");
-        return;
-    }
-
-    _originalLifeAmount = userAmount;
-    _lifes.textContent = `Lifes: ${_lifeAmount}`;
-
-    changeTitlesOnLoss();
-    resetGame(this, _boardModel.Columns, _boardModel.Rows);
-}
-
-function changeTitlesOnLoss() {
-    if (_lossStreakCount == 0) {
-        return;
-    }
-
-    changeTitles("Good luck!", [_lossStreakCount + 1 + (_lossStreakCount + 1 == 1 ? "st " :
-                                                        _lossStreakCount + 1 == 2 ? "nd " :
-                                                        _lossStreakCount + 1 == 3 ? "rd " : "th ") + "try's a charm"]);
-}

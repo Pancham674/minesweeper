@@ -6,7 +6,7 @@ namespace minesweeper.Controllers
 	{
 		public static Board _board = new Board();
 
-		public IActionResult Game()
+		public IActionResult Start()
 		{
 			if (_board.CellCount == 0)
 			{
@@ -16,7 +16,7 @@ namespace minesweeper.Controllers
 			{   //rearrange cells!!
 				_board.InitCells();
 			}
-			return View(_board);
+			return View("Game", _board);
 		}
 
 		public IActionResult LoadBoard()
