@@ -1,4 +1,5 @@
 using minesweeper.Models;
+using System.Text.Json.Serialization;
 
 public class Board
 {
@@ -7,9 +8,12 @@ public class Board
 	int _bombCount;
 	int _cellCount;
 
+	static int _originalLifeCount;
+	int _lifeCount;
+	
 	bool _roundStarted;
-	int _lifeAmount;
-	int _setFlags;
+	int _setFlagCount;
+	long _revealedCellsCount;
 
 	Random _rand = new Random();
 
@@ -21,18 +25,25 @@ public class Board
 	/// </summary>
 	public Board()
 	{
-		_rows = _rand.Next(5, 15);
-		_columns = _rand.Next(5, 15);
-		_cells = new Cell[_columns, _rows];
-
-		_cellCount = _rows * _columns;
-		_bombCount = (int)Math.Round(_cellCount / 4f);
-
-		_summary = new RoundSummary();
+		_originalLifeCount = 1;
+		adjustBoardAttrbutes(_rand.Next(5, 15), _rand.Next(5, 15));
 		InitCells();
 	}
 
 	public Board(int myColumns, int myRows)
+	{
+		adjustBoardAttrbutes(myColumns, myRows);
+		InitCells();
+	}
+
+	public Board(int myColumns, int myRows, int myLifes)
+	{
+		_originalLifeCount = myLifes;
+		adjustBoardAttrbutes(myColumns, myRows);
+		InitCells();
+	}
+
+	void adjustBoardAttrbutes(int myColumns, int myRows)
 	{
 		_columns = myColumns;
 		_rows = myRows;
@@ -42,12 +53,19 @@ public class Board
 		_bombCount = (int)Math.Round(_cellCount / 4f);
 
 		_summary = new RoundSummary();
+		ResetUserStats();
 		InitCells();
+	}
+
+	void ResetUserStats()
+	{
+		_lifeCount = _originalLifeCount;
+		_setFlagCount = 0;
+		_revealedCellsCount = 0;
 	}
 
 	public void InitCells()
 	{
-		ResetUserStats();
 		Queue<bool> bombList = InitBombList();
 
 		for (int c = 0; c < _columns; c++)
@@ -156,17 +174,15 @@ public class Board
 		}
 		else if (myCell.IsBomb)
 		{
-			_lifeAmount--;
-			//_lifes.textContent = `Lifes: ${ _lifeAmount}`;
+			_lifeCount--;
 
 			//treat bomb as flag for chording
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (_lifeAmount <= 0)
+			if (_lifeCount <= 0)
 			{
 				RevealBoard(false);
-				//changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
 				return;
 			}
 		}
@@ -177,7 +193,7 @@ public class Board
 		}
 
 		myCell.IsRevealed = true;
-		//changeBoardProgress(myCell.IsBomb);
+		_revealedCellsCount++;
 
 		if (myCell.NeighboringBombs == 0)
 		{
@@ -187,15 +203,8 @@ public class Board
 		if (IsGameFinished())
 		{
 			//revealBoard(true);
-			//changeTitles("Board Finished!", ["Awesome!", "Congrats!!", "Amazing!!!"]);
 			return;
 		}
-	}
-
-	void ResetUserStats()
-	{
-		_lifeAmount = 1;
-		_setFlags = 0;
 	}
 
 	public void Chord(Cell myCell)
@@ -252,14 +261,14 @@ public class Board
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
 		{
 			if (cCol < 0 || cCol > _columns - 1)
-			{           //dont go out of the board
+			{   //dont go out of the board
 				continue;
 			}
 
 			for (int cRow = myCell.Row - 1; cRow < myCell.Row + 2; cRow++)
 			{
 				if (cRow < 0 || cRow > _rows - 1)
-				{          //dont go out of the board
+				{   //dont go out of the board
 					continue;
 				}
 
@@ -272,14 +281,13 @@ public class Board
 				}
 
 				neighbor.IsRevealed = true;
-				//changeBoardProgress();
+				_revealedCellsCount++;
 
 				//give player their flag back
 				if (neighbor.IsFlagged)
 				{
-					_setFlags--;
+					_setFlagCount--;
 					neighbor.IsFlagged = false;
-					//_remainingFlags.textContent = `Remaining flags: ${ _bombCount - _setFlags}/${ _bombCount}`;
 				}
 
 				//continue uncovering cells that have no bombs as neigbors!!!
@@ -303,17 +311,15 @@ public class Board
 		//remove the flag
 		if (cell.IsFlagged)
 		{
-			_setFlags--;
+			_setFlagCount--;
 			cell.IsFlagged = false;
 		}
 		//only add a flag if the amount of set flags is lesser than the amount of bombs
-		else if (_setFlags < _bombCount)
+		else if (_setFlagCount < _bombCount)
 		{
-			_setFlags++;
+			_setFlagCount++;
 			cell.IsFlagged = true;
 		}
-
-		//_remainingFlags.textContent = `Remaining flags: ${ _bombCount - _setFlags}/${ _bombCount}`;
 	}
 
 	//muss ins js
@@ -355,7 +361,7 @@ public class Board
 
 	public bool IsGameFinished()
 	{
-		if (_lifeAmount <= 0)
+		if (_lifeCount <= 0)
 		{
 			return true;
 		}
@@ -405,6 +411,13 @@ public class Board
 		set => _bombCount = value; 
 	}
 	public int CellCount { get => _cellCount; }
+	public int SetFlagCount { get => _setFlagCount; }
+	public int LifeCount { get => _lifeCount; }
+	public long RevealedCellCount { get => _revealedCellsCount; }
+
+	[JsonIgnore]
 	public Cell[,] Cells { get => _cells; }
+	
+	[JsonIgnore]
 	public RoundSummary Summary { get => _summary; }
 }

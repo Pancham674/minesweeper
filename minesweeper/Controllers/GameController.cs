@@ -7,15 +7,8 @@ namespace minesweeper.Controllers
 		public static Board _board = new Board();
 
 		public IActionResult Start()
-		{
-			if (_board.CellCount == 0)
-			{
-				_board = new Board();
-			}
-			else
-			{   //rearrange cells!!
-				_board.InitCells();
-			}
+		{	//rearrange cells!!
+			_board.InitCells();
 			return View("Game", _board);
 		}
 
@@ -27,6 +20,12 @@ namespace minesweeper.Controllers
 		public IActionResult ResetGame(int myColumn, int myRow)
 		{
 			_board = new Board(myColumn, myRow);
+			return PartialView("../_Board", _board);
+		}
+		
+		public IActionResult ResetGameAndChangeLifes(int myColumn, int myRow, int myLifes)
+		{
+			_board = new Board(myColumn, myRow, myLifes);
 			return PartialView("../_Board", _board);
 		}
 
@@ -49,6 +48,11 @@ namespace minesweeper.Controllers
 			_board.ToggleFlag(myColumn, myRow);
 			Cell cell = _board.Cells[myColumn, myRow];
 			return PartialView("../_Cell", cell);
+		}
+
+		public int GetSetFlagCount()
+		{
+			return _board.SetFlagCount;
 		}
 	}
 }

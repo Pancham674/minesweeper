@@ -1,4 +1,5 @@
 ﻿function refreshResetBtn() {
+    //todo: move this btn outside of _board, mayve above partialBoard in Game
     $('.resetsGame.resetbtn').click(function () {
         console.log("Game has been reset");
         resetGame(this, $(this).data("column"), $(this).data("row"));
@@ -6,13 +7,15 @@
 }
 
 /**
- * Adds events to .partialCell divs insetad of the cellView/button itself, so those events dont have to be readded again after a reload
+ * Adds events to .partialCell divs insetad of the cellView/button itself, so those events dont have to be readded again if only the button gets reloaded.
  */
 function refreshCellEvents() {
     $('#partialBoard .partialCell').each(function () {
         let partialCell = this;
         let cellView = this.firstElementChild;
         let cellModel = JSON.parse(cellView.dataset.model);
+
+        refreshBoardStats(partialCell.parentElement.parentElement);
 
         //change class if its no longer interactable (0-cell) and remove flagging
         if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
@@ -39,7 +42,7 @@ function refreshCellEvents() {
                     }
 
                     $('#partialBoard').load('/Game/LoadBoard', function (data, status, xhr) {
-                        console.log("board has been updated, was ", status);
+                        console.log("boardView has been updated, was ", status);
 
                         if (status !== "success") {
                             console.log(xhr);
@@ -57,21 +60,32 @@ function refreshCellEvents() {
 
                 $(partialCell).load('/Game/ToggleFlag', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status, xhr) => {
                     console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
+
                     if (status != 'success') {
                         console.warn(xhr);
                         return;
                     }
+
                     cellView = partialCell.firstElementChild;
                     cellModel = JSON.parse(cellView.dataset.model);
+
+                    $.get("/Game/GetSetFlagCount", (data, status) => {
+                        if (status != 'success') {
+                            console.warn(data);
+                            return;
+                        }
+
+                        refreshAfterFlagToggle(data);
+                    });
                 });
             },
 
             mouseenter: function () {
-                ToggleClassOnHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
+                ToggleClassOnHover(cellModel, partialCell.parentElement.parentElement);
             },
 
             mouseleave: function () {
-                ToggleClassOnHoverStartEnd(cellModel, partialCell.parentElement.parentElement);
+                ToggleClassOnHover(cellModel, partialCell.parentElement.parentElement);
             }
         });
     });
