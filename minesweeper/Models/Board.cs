@@ -8,35 +8,41 @@ public class Board
 	int _bombCount;
 	int _cellCount;
 
-	static int _originalLifeCount;
-	int _lifeCount;
-	int _lossStreakCount;
-
 	bool _hasRoundStarted;
-	int _setFlagCount;
 	long _revealedCellsCount;
+	
+	int _lifeCount;
+	int _setFlagCount;
+	int _lossStreakCount;
+	static int _originalLifeCount;
 
-	Random _rand = new Random();
+	Random _randon = new Random();
 
 	Cell[,] _cells;
 	RoundSummary _summary;
 
 	/// <summary>
-	/// Standard constructor, will initialise a _rand size between 5 to 15 coluumns and rows
+	/// Standard constructor, will initialize a random count between 5 to 15 for colums and rows
 	/// </summary>
 	public Board()
 	{
 		_originalLifeCount = 1;
-		adjustBoardAttrbutes(_rand.Next(5, 15), _rand.Next(5, 15));
+		adjustBoardAttrbutes(_randon.Next(5, 15), _randon.Next(5, 15));
 		InitCells();
 	}
 
+	/// <summary>
+	/// Will initialize a Board with specific columns and rows count
+	/// </summary>
 	public Board(int myColumns, int myRows)
 	{
 		adjustBoardAttrbutes(myColumns, myRows);
 		InitCells();
 	}
 
+	/// <summary>
+	/// Will initialize a Board with specific columns, rows and lifes count
+	/// </summary>
 	public Board(int myColumns, int myRows, int myLifes)
 	{
 		_originalLifeCount = myLifes;
@@ -44,6 +50,11 @@ public class Board
 		InitCells();
 	}
 
+	/// <summary>
+	/// Sets the cell- and bombCount depending on myColumns and myRows. Initializes an empty summary and calls InitCells() afterwards.
+	/// </summary>
+	/// <param name="myColumns"></param>
+	/// <param name="myRows"></param>
 	void adjustBoardAttrbutes(int myColumns, int myRows)
 	{
 		_columns = myColumns;
@@ -125,7 +136,6 @@ public class Board
 	/// <summary>
 	/// Initializes and returns a bool Queue for the board that contains all the position of all bombs and safe cells
 	/// </summary>
-	/// <returns></returns>
 	Queue<bool> InitBombList()
 	{
 		int tmpBombs = _bombCount;
@@ -135,7 +145,7 @@ public class Board
 		//after this bombList will have the correct amount of cells randomized to be bombs
 		for (int i = 0; i < boardSize; i++)
 		{
-			int randNumber = _rand.Next(0, 4);
+			int randNumber = _randon.Next(0, 4);
 
 			if (randNumber == 3 && tmpBombs > 0)
 			{
@@ -151,7 +161,7 @@ public class Board
 		//...but it may not have _bombCount amount of bombs, so put in the rest till tmpBombs is 0
 		while (tmpBombs > 0)
 		{   //select random cells to be bombs, if its not already one
-			int randCell = _rand.Next(boardSize - 1);
+			int randCell = _randon.Next(boardSize - 1);
 			if (!bombList[randCell])
 			{
 				bombList[randCell] = true;
@@ -167,7 +177,10 @@ public class Board
 		_hasRoundStarted = true;
 		CellClicked(_cells[myColumn, myRow]);
 	}
-
+	
+	/// <summary>
+	/// Performs different actions based on the attributes of myCell.
+	/// </summary>
 	void CellClicked(Cell myCell)
 	{
 		if (myCell.IsFlagged)
@@ -185,7 +198,7 @@ public class Board
 
 			if (IsGameFinished())
 			{
-				RevealAllBombs();
+				RevealBombs();
 				return;
 			}
 			//this will be incremented in a few lines even though it shouldnt be affected when bombs are clicked
@@ -202,16 +215,19 @@ public class Board
 
 		if (myCell.NeighboringBombs == 0)
 		{
-			UncoverNeighboringCells(myCell);
+			RevealNeighboringCells(myCell);
 		}
 
 		if (IsGameFinished())
 		{
-			RevealAllBombs();
+			RevealBombs();
 			return;
 		}
 	}
 
+	/// <summary>
+	/// Reveals neighbors of myCell if the flags on the neighbors is equal/greater than myCell.NeighboringBombs.
+	/// </summary>
 	public void Chord(Cell myCell)
 	{
 		int flaggedNeighbors = 0;
@@ -261,7 +277,11 @@ public class Board
 		}
 	}
 
-	void UncoverNeighboringCells(Cell myCell)
+	/// <summary>
+	/// Reveal neighbors of myCell if the neighbor itself has no neigboringBombs, aka a 0 cell.
+	/// </summary>
+	/// <param name="myCell"></param>
+	void RevealNeighboringCells(Cell myCell)
 	{	//loop around cellModels neigbors
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
 		{
@@ -298,12 +318,17 @@ public class Board
 				//continue uncovering cells that have no bombs as neigbors!!!
 				if (neighbor.NeighboringBombs == 0)
 				{
-					UncoverNeighboringCells(neighbor);
+					RevealNeighboringCells(neighbor);		//i LOVE recursion!!!!!
 				}
 			}
 		}
 	}
 
+	/// <summary>
+	/// Either adds or sets a flag on a specific cell
+	/// </summary>
+	/// <param name="myColumn"></param>
+	/// <param name="myRow"></param>
 	public void ToggleFlag(int myColumn, int myRow)
 	{
 		Cell cell = _cells[myColumn, myRow];
@@ -325,7 +350,10 @@ public class Board
 		}
 	}
 
-	void RevealAllBombs()
+	/// <summary>
+	/// Iterates through _cells to reveal ALL bombs. Gets called when round's finished.
+	/// </summary>
+	void RevealBombs()
 	{
 		foreach(Cell cell in _cells)
 		{
@@ -358,8 +386,7 @@ public class Board
 		//assume player won
 		bool isFinished = true;
 		foreach (Cell cell in _cells)
-		{
-			//check cells that are not bombs but also not revealed (all non bombs must be revealed required to win)
+		{	//check cells that are not bombs but also not revealed (all non bombs must be revealed required to win)
 			if (!cell.IsBomb && !cell.IsRevealed)
 			{
 				isFinished = false;

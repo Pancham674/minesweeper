@@ -2,32 +2,32 @@
  * Adds events to .partialCell divs insetad of the cellView/button itself, so those events dont have to be readded again if only the button gets reloaded.
  */
 function refreshCellEvents() {
-    $('#partialBoard .partialCell').each(function () {
+    $('.partialCell').each(function () {
         let partialCell = this;
         let cellView = this.firstElementChild;
         let cellModel = JSON.parse(cellView.dataset.model);
 
-        //change class if its no longer interactable (0-cell) and remove flagging
+        //change class if it has no bombs around it and make it uninteractable
         if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
             cellView.className = "empty cell";
             return;
         }
 
-        $(partialCell).on({
+        $(partialCell).on({         //attach click, contextmenu, mouseenter and -leave eventhandlers
             click: function () {
                 if (cellModel.IsFlagged) {
                     console.log("dont l-click that flag cell now....");
                     return;
                 }
 
-                $.post('/Game/CellClicked', { myColumn: cellModel.Column, myRow: cellModel.Row }, function (data, status) {
+                $.post("/Game/CellClicked", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (response, status) {
                     console.log("cell in c", cellModel.Column, " r", cellModel.Row, " clicked, was: "+ status);
                     if (status !== "success") {
                         return;
                     }
 
                     //reload the entire board
-                    $('#partialBoard').load('/Game/GetBoard', function (data, status, xhr) {
+                    $("#partialBoard").load("/Game/GetBoard", function (response, status, xhr) {
                         console.log("boardView has been updated, was ", status);
 
                         if (status !== "success") {
@@ -37,7 +37,7 @@ function refreshCellEvents() {
                         refreshBoardStats(this.children[0]);
 
                         //check if round is finished
-                        $.get('/Game/GetIsFinished', function (isFinished, status) {
+                        $.get("/Game/GetIsFinished", function (isFinished, status) {
                             if (status !== "success") {
                                 console.warn(isFinished);
                                 return;
@@ -71,10 +71,10 @@ function refreshCellEvents() {
             },
 
             contextmenu: function (e) {
-                $(partialCell).load('/Game/ToggleFlag', { myColumn: cellModel.Column, myRow: cellModel.Row }, (data, status, xhr) => {
+                $(partialCell).load("/Game/ToggleFlag", { myColumn: cellModel.Column, myRow: cellModel.Row }, (response, status, xhr) => {
                     console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
 
-                    if (status != 'success') {
+                    if (status != "success") {
                         console.warn(xhr);
                         return;
                     }
@@ -82,13 +82,13 @@ function refreshCellEvents() {
                     cellView = partialCell.firstElementChild;
                     cellModel = JSON.parse(cellView.dataset.model);
 
-                    $.get("/Game/GetSetFlagCount", (data, status) => {
-                        if (status != 'success') {
-                            console.warn(data);
+                    $.get("/Game/GetSetFlagCount", (setFlagCount, status) => {
+                        if (status != "success") {
+                            console.warn(setFlagCount);
                             return;
                         }
 
-                        refreshAfterFlagToggle(data);
+                        refreshAfterFlagToggle(setFlagCount);
                     });
                 });
             },

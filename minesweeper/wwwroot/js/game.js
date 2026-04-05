@@ -1,26 +1,26 @@
 ﻿let _boardModel;
 let _boardIsRoundFinished = false;
 
-let _remainingFlagsStat = $("#remainingFlags")[0];
-let _boardProgressStat = $("#boardProgress")[0];
-let _lifesStat = $("#lifes")[0];
+let _remainingFlagsStat;
+let _boardProgressStat;
+let _lifesStat;
 
 
-$(document).ready(function() {
+$(document).ready(function () {
+    console.log("document is ready");
+
     getPartialBoard("GetBoard");
-    $('#partialBoard').contextmenu((e) => { e.preventDefault(); })
-    $('.buttons .resetsGame').click(function() {
-        resetGame(this);
-    });
+    $("#partialBoard").contextmenu(function(e) { e.preventDefault(); })
+    $(".buttons .resetsGame").click(function() { resetGame(this); });
 
-    $('.resetsGame.resetbtn').click(function () {
+    $(".resetbtn").click(function () {
         let board = JSON.parse($("#board")[0].dataset.model);
         resetGame(this, board.Columns, board.Rows);
     });
 
     //sets number input width to its placeholder text
-    $('input').each(function () {
-        this.setAttribute('size', this.getAttribute('placeholder').length);
+    $("input").each(function () {
+        this.setAttribute("size", this.getAttribute("placeholder").length);
     });
 
     _remainingFlagsStat = $("#remainingFlags")[0];
@@ -30,22 +30,21 @@ $(document).ready(function() {
 
 /**
 * Will reset the game though communication with server.
-* If customColumn and -Row are undefined then the data will be avaiable within sender.
+* If customColumn and -Row are undefined then the data will be retrieved from the sender.
 * Will not change life count stat if its undefined.
 */
 function resetGame(sender, customColumn, customRow, customLifesCount) {
-    $.get("/Game/GetHasRoundStarted", function (data, status) {
+    $.get("/Game/GetHasRoundStarted", function (hasRoundStarted, status) {
         if (status !== "success") {
-            console.warn(data);
+            console.warn(hasRoundStarted);
             return;
         }
 
-        if ((data && !_boardIsRoundFinished) && !confirm("Applying new settings will also reset the current round." +
+        if ((hasRoundStarted && !_boardIsRoundFinished) && !confirm("Applying new settings will also reset the current round." +
             "\nAre you sure you want to continue?")) {
             return;
         }
 
-        console.log("Game has been reset");
         var column = customColumn === undefined ? $(sender).data("column") : customColumn;
         var row = customRow === undefined ? $(sender).data("row") : customRow;
 
@@ -55,6 +54,7 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
         }
 
         getPartialBoard("ResetGameAndChangeLifes", column, row, customLifesCount);
+        console.log("Game has been reset");
     });
 }
 
@@ -65,10 +65,6 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
  *    - column & row: resets with custom size
  *    - customLifeCount: resets with different life count, column and row are required.
  * endPoint is required for all.
- * @param {any} endPoint
- * @param {any} column
- * @param {any} row
- * @param {any} customLifesCount
  */
 function getPartialBoard(endPoint, column, row, customLifesCount) {
     $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (response, stat, xhr) {
@@ -85,11 +81,12 @@ function getPartialBoard(endPoint, column, row, customLifesCount) {
     });
 }
 
+/**
+ * Refreshes the current statistics shown to the player.
+ */
 function refreshBoardStats(currentBoardView) {
-    if (currentBoardView) {
-        console.log("boardModel has been updated to current")
-        _boardModel = JSON.parse(currentBoardView.dataset.model);
-    }
+    console.log("boardModel has been updated to current")
+    _boardModel = JSON.parse(currentBoardView.dataset.model);
 
     refreshAfterFlagToggle(_boardModel.SetFlagCount);
     _lifesStat.textContent = `Lifes: ${_boardModel.LifeCount}`;
@@ -101,32 +98,30 @@ function refreshAfterFlagToggle(currentSetFlagCount) {
 }
 
 /**
- * Highlights the neigbors of an uncovered cell by adding a classname. The uncovered cell must be hovered on.
- * Intended to help the player see the neighbors more directly, especially for chording.
- * @param {any} cellModel
- * @returns
+ * Highlights the unrevealed neighbors of a revealed cell by adding or removing a classname based on if its currently hovered on or not.
+ * Intended to help the player see the neighbors more clearly for chording.
  */
 function ToggleClassOnHover(cellModel, boardView, isHovering) {
-    //only neighbors of uncovered cells should be marked
+    //only neighbors of revealed cells should be marked
     if (!cellModel.IsRevealed) {
         return;
     }
 
-    //loop around cellModels neigbors
-    for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
-        if (cCol < 0 || cCol > _boardModel.Columns - 1) {           //dont go out of the board
+    //loop around cellModels neighbors
+    for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {
+        if (col < 0 || col > _boardModel.Columns - 1) {           //dont go out of the board
             continue;
         }
 
-        for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
-            if (cRow < 0 || cRow > _boardModel.Rows - 1) {          //dont go out of the board
+        for (let row = cellModel.Row - 1; row < cellModel.Row + 2; row++) {
+            if (row < 0 || row > _boardModel.Rows - 1) {          //dont go out of the board
                 continue;
             }
 
-            const neighborView = boardView.children[cRow].children[cCol].firstElementChild;
+            const neighborView = boardView.children[row].children[col].firstElementChild;
             const neighborModel = JSON.parse(neighborView.dataset.model);
 
-            //ignore self, revealed cells and flagged cells since they wont be marked
+            //ignore self, revealed cells and flagged cells since they shouldnt be marked/affected by chords
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
                 continue;
             }
@@ -142,8 +137,7 @@ function ToggleClassOnHover(cellModel, boardView, isHovering) {
 }
 
 /**
- * Accepts the custom size if its valid and resets the board.
- * @returns
+ * Accepts the custom size if its valid and calls resetGame with new attributes.
  */
 function confirmCustomSize() {
     let customRow = $("#customRow")[0];
@@ -158,8 +152,7 @@ function confirmCustomSize() {
 }
 
 /**
- * Changes the life amount and reset the game.
- * @returns
+ * Accepts the custom life count if its valid and calls resetGame with the new attribute.
  */
 function confirmLifeAmount() {
     let customLifes = $("#customLifes")[0];
@@ -174,31 +167,29 @@ function confirmLifeAmount() {
 
 /**
  * Changes both title and subtitle
- * @param {any} titleText
- * @param {any} subtitleText
  */
 function changeTitles(titleText, subtitleText) {
-    let title = document.getElementById("title");
-    let subtitle = document.getElementById("subtitle");
+    let title = $("#title")[0];
+    let subtitle = $("#subtitle")[0];
 
     title.textContent = titleText;
     subtitle.textContent = subtitleText[Math.floor(Math.random() * subtitleText.length)];
 }
 
 function changeTitlesOnLoss() {
-    $.get("/Game/GetLossStreakCount", function (data, status) {
+    $.get("/Game/GetLossStreakCount", function (lossStreakCount, status) {
         console.log("Retrieving LossStreakCount was "+ status);
         if (status !== "success") {
             return;
         }
 
-        if (data == 0) {
+        if (lossStreakCount == 0) {
             return;
         }
 
-        changeTitles("Good luck!", [data + 1 + (data + 1 == 1 ? "st " :
-                                                data + 1 == 2 ? "nd " :
-                                                data + 1 == 3 ? "rd " :
+        changeTitles("Good luck!", [lossStreakCount + 1 + (lossStreakCount + 1 == 1 ? "st " :
+                                                lossStreakCount + 1 == 2 ? "nd " :
+                                                lossStreakCount + 1 == 3 ? "rd " :
                                                                 "th ") +
                                                 "try's a charm"]);
     });
