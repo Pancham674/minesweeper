@@ -1,33 +1,23 @@
-﻿/**
- * Contains the tableBody element for all cellViews
- * do _boardViewTableBody.children[Row].cells[Column].children[0] to get the view of a specific cellModel 
- */
-let _boardViewBody;
-let _boardModel;
-let _boardView;
+﻿let _boardModel;
+
+//htmlElements
+const _remainingFlagsStat = $("#remainingFlags")[0];
+const _boardProgressStat = $("#boardProgress")[0];
+const _lifesStat = $("#lifes")[0];
+
+//player specific elements
+let _lossStreakCount = 0;
+
+let _roundStarted;
+
+
 
 //reuse lifes in future rounds
 let _originalLifeAmount = 1;
 let _lifeAmount = _originalLifeAmount;
-let _bombCount;
-
-//htmlElements
-const _remainingFlags = document.getElementById("remainingFlags");
-const _boardProgress = document.getElementById("boardProgress");
-const _lifes = document.getElementById("lifes");
-
-//player specific elements
-let _lossStreakCount = 0;
-let _uncoveredCells;
-let _roundStarted;
-let _setFlags;
-
-const _fracNumBombs = 4;
-let _cellCount;
-
-let _boardColumns;
-let _boardRows;
-
+let _setFlagCount;
+let _uncoveredCellsCount = 0;
+let _boardView;
 $(document).ready(function() {
     $("#partialBoard").load("/Game/LoadBoard", { }, onServerResponse);
     $('.resetsGame').click(function() {
@@ -36,17 +26,16 @@ $(document).ready(function() {
     });
 
     //sets number input width to its placeholder text
-    let inpNums = document.querySelectorAll('input');
-    for (i = 0; i < inpNums.length; i++) {
-        inpNums[i].setAttribute('size', inpNums[i].getAttribute('placeholder').length);
-    }
+    $('input').each(function () {
+        this.setAttribute('size', this.getAttribute('placeholder').length);
+    });
 })
 
 /**
 * Will reset the game though interaction with server.
 * customColumn and -Row will be defined if this function gets called from the user defined custom size option.
 */
-function resetGame(sender, customColumn, customRow) {
+function resetGame(sender, customColumn, customRow, customLifesCount) {
     if (_roundStarted && !isGameFinished() && !confirm("Applying new settings will also reset the current round." +
         "\nAre you sure you want to continue?")) {
         return;
@@ -54,68 +43,43 @@ function resetGame(sender, customColumn, customRow) {
 
     var column = customColumn === undefined ? $(sender).data('column') : customColumn;
     var row = customRow === undefined ? $(sender).data("row") : customRow;
-    $("#partialBoard").load("/Game/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
+
+    if (!customLifesCount) {
+        $("#partialBoard").load("/Game/ResetGame", { myColumn: column, myRow: row }, onServerResponse);
+        return;
+    }
+
+    $("#partialBoard").load("/Game/ResetGameAndChangeLifes", { myColumn: column, myRow: row, myLifes: customLifesCount }, onServerResponse);
 }
 
 function onServerResponse(response, stat, xhr) {
     console.log("Server response was", stat);
 
     if (stat == "success") {
+        _boardModel = JSON.parse($("#board")[0].dataset.model);
+
         changeTitlesOnLoss();
         refreshCellEvents();
+        refreshBoardStats();
         refreshResetBtn();
-        //refreshBoardElements();
-
-        _boardViewBody = $("#board")[0];
-        _boardColumns = _boardViewBody.dataset.columns;
-        _boardRows = _boardViewBody.dataset.rows;
     }
     else {
         console.warn("xhr:", xhr);
     }
 }
+function refreshBoardStats(currentBoardView) {
+    if (currentBoardView) {
+        console.log("boardModel has been updated to current")
+        _boardModel = JSON.parse(currentBoardView.dataset.model);
+    }
 
-/**
- * Gets the current board model, view and other elements after a reset.
- */
-function refreshBoardElements() {
-    //_boardView = document.getElementById('board');
-    //_boardModel = JSON.parse(_boardView.dataset.board);
-    //_boardViewBody = _boardView.firstElementChild.firstElementChild;
+    refreshAfterFlagToggle(_boardModel.SetFlagCount);
+    _lifesStat.textContent = `Lifes: ${_boardModel.LifeCount}`;
+    _boardProgressStat.textContent = `Covered Cells: ${(_boardModel.CellCount - _boardModel.BombCount) - _boardModel.RevealedCellCount}/${_boardModel.CellCount - _boardModel.BombCount}`;
+}
 
-    //_bombCount = _boardModel.BombCount;
-    //_cellCount = _boardModel.CellCount;
-
-    //_setFlags = 0;
-    //_uncoveredCells = 0;
-    //_roundStarted = false;
-    //_lifeAmount = _originalLifeAmount;
-
-    _remainingFlags.textContent = `Remaining flags: ${_bombCount}/${_bombCount}`;
-    _boardProgress.textContent = `Covered Cells: ${_cellCount - _bombCount}/${_cellCount - _bombCount}`;
-    _lifes.textContent = `Lifes: ${_lifeAmount}`;
-
-    //_boardView.oncontextmenu = (e) => { e.preventDefault(); }
-
-    //_boardView.addEventListener('onCellLeftClick', e => {
-    //    const { column, row } = e.detail;
-    //    onCellClicked(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
-    //});
-
-    //_boardView.addEventListener('onCellRightClick', e => {
-    //    const { column, row } = e.detail;
-    //    setFlag(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
-    //});
-
-    //_boardView.addEventListener('onCellHover', e => {
-    //    const { column, row } = e.detail;
-    //    onCellHover(_boardModel.Cells[column][row]);
-    //});
-
-    //_boardView.addEventListener('onCellHoverEnded', e => {
-    //    const { column, row } = e.detail;
-    //    onCellHoverEnded(_boardModel.Cells[column][row]);
-    //});
+function refreshAfterFlagToggle(currentSetFlagCount) {
+    _remainingFlagsStat.textContent = `Remaining flags: ${_boardModel.BombCount - currentSetFlagCount}/${_boardModel.BombCount}`;
 }
 
 /**
@@ -124,7 +88,7 @@ function refreshBoardElements() {
  * @param {any} cellModel
  * @returns
  */
-function ToggleClassOnHoverStartEnd(cellModel, boardViewBody) {
+function ToggleClassOnHover(cellModel, boardViewBody) {
     //only neighbors of uncovered cells should be marked
     if (!cellModel.IsRevealed) {
         return;
@@ -132,12 +96,12 @@ function ToggleClassOnHoverStartEnd(cellModel, boardViewBody) {
 
     //loop around cellModels neigbors
     for (let cCol = cellModel.Column - 1; cCol < cellModel.Column + 2; cCol++) {
-        if (cCol < 0 || cCol > _boardColumns - 1) {           //dont go out of the board
+        if (cCol < 0 || cCol > _boardModel.Columns - 1) {           //dont go out of the board
             continue;
         }
 
         for (let cRow = cellModel.Row - 1; cRow < cellModel.Row + 2; cRow++) {
-            if (cRow < 0 || cRow > _boardRows - 1) {          //dont go out of the board
+            if (cRow < 0 || cRow > _boardModel.Rows - 1) {          //dont go out of the board
                 continue;
             }
 
@@ -159,16 +123,15 @@ function ToggleClassOnHoverStartEnd(cellModel, boardViewBody) {
  * @returns
  */
 function confirmCustomSize() {
-    let customRow = parseInt(document.getElementById("customRow").value);
-    let customColumn = parseInt(document.getElementById("customColumn").value);
+    let customRow = $("#customRow")[0];
+    let customColumn = $("#customColumn")[0];
 
-    if (customRow < 4 || customRow > 100 || isNaN(customRow) ||
-        customColumn < 4 || customColumn > 100 || isNaN(customColumn)) {
-        alert("Please choose a value between 5 and 99.");
+    if (isNaN(parseInt(customRow.value)) || isNaN(parseInt(customColumn.value))) {
+        alert("Please choose a value between "+ customColumn.min +" and "+ customColumn.max +".");
         return;
     }
 
-    resetGame(this, customColumn, customRow);
+    resetGame(this, customColumn.value, customRow.value);
 }
 
 /**
@@ -176,30 +139,17 @@ function confirmCustomSize() {
  * @returns
  */
 function confirmLifeAmount() {
-    let userAmount = parseInt(document.getElementById("customLifes").value);
+    let customLifes = $("#customLifes")[0];
 
-    if (userAmount > 99 || userAmount < 1 || isNaN(userAmount)) {
-        alert("Please choose a life amount between 1 and 99");
+    if (isNaN(parseInt(customLifes.value))) {
+        alert("Please choose a life amount between "+ customLifes.min +" and "+ customLifes.max +".");
         return;
     }
 
-    _originalLifeAmount = userAmount;
-    _lifes.textContent = `Lifes: ${_lifeAmount}`;
-
     changeTitlesOnLoss();
-    resetGame(this, _boardModel.Columns, _boardModel.Rows);
+    resetGame(this, _boardModel.Columns, _boardModel.Rows, customLifes.value);
 }
 
-/**
- * Whenever the progress changes this function will update the amount of covered cells inn the UI.
- * @param {any} cellWasBomb
- */
-function changeBoardProgress(cellWasBomb) {
-    if (!cellWasBomb) {
-        _uncoveredCells++;
-        _boardProgress.textContent = `Covered cells: ${(_cellCount - _bombCount) - _uncoveredCells}/${_cellCount - _bombCount}`;
-    }
-}
 /**
  * Changes both title and subtitle
  * @param {any} titleText
@@ -223,6 +173,58 @@ function changeTitlesOnLoss() {
             _lossStreakCount + 1 == 3 ? "rd " : "th ") + "try's a charm"]);
 }
 
+
+
+/**
+ * Gets the current board model, view and other elements after a reset.
+ */
+function refreshBoardElements() {
+    //_boardView = document.getElementById('board');
+    //_boardModel = JSON.parse(_boardView.dataset.board);
+    //_boardViewBody = _boardView.firstElementChild.firstElementChild;
+
+    //_bombCount = _boardModel.BombCount;
+    //_cellCount = _boardModel.CellCount;
+
+    //_setFlags = 0;
+    //_uncoveredCells = 0;
+    //_roundStarted = false;
+    //_lifeAmount = _originalLifeAmount;
+
+
+
+    //_boardView.oncontextmenu = (e) => { e.preventDefault(); }
+
+    //_boardView.addEventListener('onCellLeftClick', e => {
+    //    const { column, row } = e.detail;
+    //    onCellClicked(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
+    //});
+
+    //_boardView.addEventListener('onCellRightClick', e => {
+    //    const { column, row } = e.detail;
+    //    setFlag(_boardModel.Cells[column][row], _boardViewBody.children[row].cells[column].children[0]);
+    //});
+
+    //_boardView.addEventListener('onCellHover', e => {
+    //    const { column, row } = e.detail;
+    //    onCellHover(_boardModel.Cells[column][row]);
+    //});
+
+    //_boardView.addEventListener('onCellHoverEnded', e => {
+    //    const { column, row } = e.detail;
+    //    onCellHoverEnded(_boardModel.Cells[column][row]);
+    //});
+}
+/**
+ * Whenever the progress changes this function will update the amount of covered cells inn the UI.
+ * @param {any} cellWasBomb
+ */
+//function changeBoardProgress(cellWasBomb) {
+//    if (!cellWasBomb) {
+//        _uncoveredCellsCount++;
+//        _boardProgress.textContent = `Covered cells: ${(_boardModel.CellCount - _boardModel.BombCount) - _uncoveredCellsCount}/${_boardModel.CellCount - _boardModel.BombCount}`;
+//    }
+//}
 /**
  * Will reveal the clicked cell and performs a specific action based on its attributes
 */
