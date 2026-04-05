@@ -12,7 +12,7 @@ namespace minesweeper.Controllers
 			return View("Game", _board);
 		}
 
-		public IActionResult LoadBoard()
+		public IActionResult GetBoard()
 		{
 			return PartialView("../_Board", _board);
 		}
@@ -32,15 +32,6 @@ namespace minesweeper.Controllers
 		public void CellClicked(int myColumn, int myRow)
 		{
 			_board.CellClicked(myColumn, myRow);
-			//bool isGameWon = _board.IsGameWon(); 
-
-			if (_board.IsGameFinished())
-			{
-				//return RedirectToAction("RevealBoardView");
-			}
-
-			//Cell cell = _board.Cells[myColumn, myRow];
-			//return PartialView("../_Cell", cell);
 		}
 
 		public IActionResult ToggleFlag(int myColumn, int myRow)
@@ -53,6 +44,16 @@ namespace minesweeper.Controllers
 		public int GetSetFlagCount()
 		{
 			return _board.SetFlagCount;
+		}
+
+		public bool GetIsFinished()
+		{
+			return _board.IsGameFinished();
+		}
+
+		public bool GetIsWon()
+		{
+			return _board.IsGameWon();
 		}
 	}
 }

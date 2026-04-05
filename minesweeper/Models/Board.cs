@@ -177,14 +177,17 @@ public class Board
 			_lifeCount--;
 
 			//treat bomb as flag for chording
+			_setFlagCount++;
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (_lifeCount <= 0)
+			if (IsGameFinished())
 			{
-				RevealBoard(false);
+				RevealAllBombs();
 				return;
 			}
+			//this will be incremented in a few lines even though it shouldnt be affected when bombs are clicked
+			_revealedCellsCount--;			//so a lazy fix
 		}
 		else if (myCell.IsRevealed)
 		{
@@ -202,7 +205,7 @@ public class Board
 
 		if (IsGameFinished())
 		{
-			//revealBoard(true);
+			RevealAllBombs();
 			return;
 		}
 	}
@@ -308,99 +311,59 @@ public class Board
 			return;
 		}
 
-		//remove the flag
-		if (cell.IsFlagged)
+		if (cell.IsFlagged)                     //remove the flag
 		{
 			_setFlagCount--;
 			cell.IsFlagged = false;
 		}
-		//only add a flag if the amount of set flags is lesser than the amount of bombs
-		else if (_setFlagCount < _bombCount)
+		else if (_setFlagCount < _bombCount)    //only add a flag if the amount of set flags is lesser than the amount of bombs
 		{
 			_setFlagCount++;
 			cell.IsFlagged = true;
 		}
 	}
 
-	//muss ins js
-	public void RevealBoard(bool myHasWon)
+	void RevealAllBombs()
 	{
-		//_boardView.className = wonGame ? _boardView.className + "won" : _boardView.className;
-		//_lossStreakCount = wonGame ? 0 : _lossStreakCount + 1;
-
-		//_boardModel.Cells.forEach((row) => {
-		//	row.forEach((myCell) => {
-		//		const cellView = _boardViewTableBody.children[myCell.Row].cells[myCell.Column].children[0];
-
-		//		cellView.removeEventListener('click', dispatchLeftClick);
-		//		cellView.removeEventListener('contextmenu', dispatchRightClick);
-		//		cellView.removeEventListener('mouseenter', dispatchMouseEnter);
-		//		cellView.removeEventListener('mouseleave', dispatchMouseLeave);
-
-		//		cellView.oncontextmenu = (e) => { e.preventDefault(); };
-
-		//		//reveal all uncovered bombs
-		//		if (myCell.IsExploded)
-		//		{
-		//			cellView.textContent = "💥";
-		//		}
-		//		else if (!myCell.IsRevealed && myCell.IsBomb)
-		//		{
-		//			cellView.textContent = "💣";
-		//		}
-
-		//		if (cellView.className.includes("hovering"))
-		//		{
-		//			cellView.className = cellView.className.substring(0, cellView.className.indexOf("hovering") - 1);
-		//		}
-
-		//		cellView.className = wonGame ? cellView.className + " won-game finished" : cellView.className + " finished";
-		//	});
-		//});
+		foreach(Cell cell in _cells)
+		{
+			cell.IsRevealed = cell.IsRevealed ? cell.IsRevealed : cell.IsBomb;
+		}
 	}
+	
 
+	/// <summary>
+	/// Returns true if the game is finished either by winning or losing.
+	/// </summary>
+	/// <returns></returns>
 	public bool IsGameFinished()
 	{
 		if (_lifeCount <= 0)
 		{
 			return true;
 		}
-
-		bool isFinished = true;
-		foreach(Cell cell in _cells)
-		{ 
-			//ignore bombs since they shouldnt be uncovered to win
-			if (cell.IsBomb)
-			{
-				continue;
-			}
-			isFinished = cell.IsRevealed ? isFinished : false;
-		}
-
-		return isFinished;
+		return IsGameWon();
 	}
 
 	public bool IsGameWon()
 	{
-		if (!IsGameFinished())
+		if (_lifeCount < 0)
 		{
 			return false;
 		}
 
-		bool isWon = true;			//assume game is won
+		//assume player won
+		bool isFinished = true;
 		foreach (Cell cell in _cells)
-		{	//...until we find a revealed bomb
-			isWon = cell.IsBomb ?
-				cell.IsExploded ? false : isWon :
-				isWon;
-
-			if (!isWon)
+		{
+			//check cells that are not bombs but also not revealed (all non bombs must be revealed required to win)
+			if (!cell.IsBomb && !cell.IsRevealed)
 			{
+				isFinished = false;
 				break;
 			}
-		} 
-
-		return isWon;
+		}
+		return isFinished;
 	}
 
 	public int Rows	{ get => _rows; }

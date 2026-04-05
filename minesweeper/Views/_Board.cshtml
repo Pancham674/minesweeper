@@ -1,6 +1,4 @@
 ﻿@model Board
-<button class="resetsGame resetbtn" data-column="@Model.Columns" data-row="@Model.Rows">Reset</button>
-
 <div id="board" data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
     
     @for (int r = 0; r < Model.Rows; r++)

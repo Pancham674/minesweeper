@@ -5,6 +5,7 @@
         @(
             Model.IsExploded ? "💥" :
                 !Model.IsRevealed && Model.IsFlagged ? "🚩" :
-                    Model.IsRevealed ? Model.NeighboringBombs : ""
+                    Model.IsRevealed && Model.IsBomb ? "💣" :
+                        Model.IsRevealed ? Model.NeighboringBombs : ""
         )
 </button>
