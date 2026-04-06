@@ -13,7 +13,7 @@ public class Board
 	
 	int _lifeCount;
 	int _setFlagCount;
-	int _lossStreakCount;
+	static int _lossStreakCount;
 	static int _originalLifeCount;
 
 	Random _randon = new Random();
@@ -172,16 +172,18 @@ public class Board
 		return new Queue<bool>(bombList);           //yay
 	}
 
-	public void CellClicked(int myColumn, int myRow)
+	public List<Cell> CellClicked(int myColumn, int myRow)
 	{
 		_hasRoundStarted = true;
-		CellClicked(_cells[myColumn, myRow]);
+		List<Cell> revealedCells = new List<Cell>();
+		CellClicked(_cells[myColumn, myRow], ref revealedCells);
+		return revealedCells;
 	}
 	
 	/// <summary>
 	/// Performs different actions based on the attributes of myCell.
 	/// </summary>
-	void CellClicked(Cell myCell)
+	void CellClicked(Cell myCell, ref List<Cell> myRevealedCells)
 	{
 		if (myCell.IsFlagged)
 		{
@@ -196,7 +198,7 @@ public class Board
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (IsGameFinished())
+			if (IsRoundFinished())
 			{
 				RevealBombs();
 				return;
@@ -206,19 +208,20 @@ public class Board
 		}
 		else if (myCell.IsRevealed)
 		{
-			Chord(myCell);
+			Chord(myCell, ref myRevealedCells);
 			return;
 		}
 
 		myCell.IsRevealed = true;
+		myRevealedCells.Add(myCell);
 		_revealedCellsCount++;
 
 		if (myCell.NeighboringBombs == 0)
 		{
-			RevealNeighboringCells(myCell);
+			RevealNeighboringCells(myCell, ref myRevealedCells);
 		}
 
-		if (IsGameFinished())
+		if (IsRoundFinished())
 		{
 			RevealBombs();
 			return;
@@ -228,7 +231,7 @@ public class Board
 	/// <summary>
 	/// Reveals neighbors of myCell if the flags on the neighbors is equal/greater than myCell.NeighboringBombs.
 	/// </summary>
-	public void Chord(Cell myCell)
+	public void Chord(Cell myCell, ref List<Cell> myRevealedCells)
 	{
 		int flaggedNeighbors = 0;
 		List<Cell> neighbors = new List<Cell>();
@@ -272,7 +275,20 @@ public class Board
 				}
 
 				//uncover neigbors
-				CellClicked(neighbor);
+				CellClicked(neighbor, ref myRevealedCells);
+			}
+		}
+	}
+
+	void RevealNeighboringCells(Cell myCell, ref List<Cell> myRevealedCells)
+	{
+		RevealNeighboringCells(myCell);
+
+		foreach (Cell cell in _cells)
+		{
+			if (cell.IsRevealed && !myRevealedCells.Contains(cell))
+			{
+				myRevealedCells.Add(cell);
 			}
 		}
 	}
@@ -325,17 +341,16 @@ public class Board
 	}
 
 	/// <summary>
-	/// Either adds or sets a flag on a specific cell
+	/// Either adds or sets a flag on a specific cell.
 	/// </summary>
-	/// <param name="myColumn"></param>
-	/// <param name="myRow"></param>
-	public void ToggleFlag(int myColumn, int myRow)
+	/// <returns>True, if the flag was toggled, otherwise false.</returns>
+	public bool ToggleFlag(int myColumn, int myRow)
 	{
 		Cell cell = _cells[myColumn, myRow];
 
 		if (cell.IsRevealed)
 		{
-			return;
+			return false;
 		}
 
 		if (cell.IsFlagged)                     //remove the flag
@@ -348,6 +363,8 @@ public class Board
 			_setFlagCount++;
 			cell.IsFlagged = true;
 		}
+
+		return true;
 	}
 
 	/// <summary>
@@ -361,40 +378,50 @@ public class Board
 		}
 	}
 	
+	public List<Cell> GetBombs()
+	{
+		List<Cell> bombs = new List<Cell>();
+		foreach(Cell cell in _cells)
+		{
+			if (cell.IsBomb)
+			{
+				bombs.Add(cell);
+			}
+		}
+		return bombs;
+	}
 
 	/// <summary>
 	/// Returns true if the game is finished either by winning or losing.
 	/// </summary>
 	/// <returns></returns>
-	public bool IsGameFinished()
+	public bool IsRoundFinished()
 	{
 		if (_lifeCount <= 0)
 		{
+			_lossStreakCount++;		//todo: fix this, it gets incremented multiple times based on how many refs this method has
 			return true;
 		}
-		return IsGameWon();
+		return IsRoundWon();
 	}
 
-	public bool IsGameWon()
-	{
-		if (_lifeCount < 0)
-		{
-			_lossStreakCount++;
-			return false;
-		}
-
-		//assume player won
-		bool isFinished = true;
+	public bool IsRoundWon()
+	{	//assume player won
+		bool isWon = true;
 		foreach (Cell cell in _cells)
-		{	//check cells that are not bombs but also not revealed (all non bombs must be revealed required to win)
+		{	//check if there are any cells that are not bombs and not revealed (all non bombs must be revealed to win)
 			if (!cell.IsBomb && !cell.IsRevealed)
 			{
-				isFinished = false;
+				isWon = false;
 				break;
 			}
 		}
-		_lossStreakCount = isFinished ? 0 : _lossStreakCount + 1;
-		return isFinished;
+
+		if (isWon)
+		{
+			_lossStreakCount = 0;
+		}
+		return isWon;
 	}
 
 	public int Rows	{ get => _rows; }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace minesweeper.Controllers
 {
@@ -6,15 +7,14 @@ namespace minesweeper.Controllers
 	{
 		public static Board _board = new Board();
 
+		/// <summary>
+		/// Gets called whenever the link in Index/Welcome page or "Game" in navigation gets clicked.
+		/// </summary>
+		/// <returns>A Partial BoardView with a random size.</returns>
 		public IActionResult Start()
-		{	//rearrange cells!!
+		{ 
 			_board.InitCells();
 			return View("Game", _board);
-		}
-
-		public IActionResult GetBoard()
-		{
-			return PartialView("../_Board", _board);
 		}
 
 		public IActionResult ResetGame(int myColumn, int myRow)
@@ -22,23 +22,49 @@ namespace minesweeper.Controllers
 			_board = new Board(myColumn, myRow);
 			return PartialView("../_Board", _board);
 		}
-		
+
 		public IActionResult ResetGameAndChangeLifes(int myColumn, int myRow, int myLifes)
 		{
 			_board = new Board(myColumn, myRow, myLifes);
 			return PartialView("../_Board", _board);
 		}
 
-		public void CellClicked(int myColumn, int myRow)
+		/// <summary>
+		/// Gets called whenever the document is ready, i guess
+		/// </summary>
+		/// <returns>Returns a partial view that displays the current boardView.</returns>
+		public IActionResult GetBoardView()
 		{
-			_board.CellClicked(myColumn, myRow);
+			return PartialView("../_Board", _board);
 		}
 
-		public IActionResult ToggleFlag(int myColumn, int myRow)
+		/// <summary>
+		/// Gets called whenever the client needs the model with current data.
+		/// </summary>
+		/// <returns>The BoardModel, which was serialized into a Json Object</returns>
+		public string GetBoardModel()
 		{
-			_board.ToggleFlag(myColumn, myRow);
-			Cell cell = _board.Cells[myColumn, myRow];
-			return PartialView("../_Cell", cell);
+			return JsonSerializer.Serialize(_board);
+		}
+
+		public IActionResult GetCellView(int myColumn, int myRow)
+		{
+			return PartialView("../_Cell", _board.Cells[myColumn, myRow]);
+		}
+
+		public string GetBombs()
+		{
+			return JsonSerializer.Serialize(_board.GetBombs());
+		}
+
+		public string CellClicked(int myColumn, int myRow)
+		{
+			return JsonSerializer.Serialize(_board.CellClicked(myColumn, myRow));
+		}
+
+		public bool ToggleFlag(int myColumn, int myRow)
+		{
+			return _board.ToggleFlag(myColumn, myRow);
 		}
 
 		public int GetSetFlagCount()
@@ -51,14 +77,14 @@ namespace minesweeper.Controllers
 			return _board.LossStreakCount;
 		}
 
-		public bool GetIsFinished()
+		public bool GetIsRoundFinished()
 		{
-			return _board.IsGameFinished();
+			return _board.IsRoundFinished();
 		}
 
-		public bool GetIsWon()
+		public bool GetIsRoundWon()
 		{
-			return _board.IsGameWon();
+			return _board.IsRoundFinished() ? _board.IsRoundWon() : false;
 		}
 
 		public bool GetHasRoundStarted()

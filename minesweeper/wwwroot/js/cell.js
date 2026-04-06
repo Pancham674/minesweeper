@@ -4,14 +4,7 @@
 function refreshCellEvents() {
     $('.partialCell').each(function () {
         let partialCell = this;
-        let cellView = this.firstElementChild;
-        let cellModel = JSON.parse(cellView.dataset.model);
-
-        //change class if it has no bombs around it and make it uninteractable
-        if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
-            cellView.className = "empty cell";
-            return;
-        }
+        let cellModel = JSON.parse(partialCell.firstElementChild.dataset.model);
 
         $(partialCell).on({         //attach click, contextmenu, mouseenter and -leave eventhandlers
             click: function () {
@@ -20,85 +13,151 @@ function refreshCellEvents() {
                     return;
                 }
 
-                $.post("/Game/CellClicked", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (response, status) {
-                    console.log("cell in c", cellModel.Column, " r", cellModel.Row, " clicked, was: "+ status);
+                //click the specific cell and get JSON data of all cells that got revealed by that click
+                $.getJSON("/Game/CellClicked", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (revealedCellsArray, status, xhr) {
+                    console.log("cell in c", cellModel.Column, " r", cellModel.Row, " clicked, was: " + status);
                     if (status !== "success") {
+                        console.log(`xhr: ${xhr}`)
                         return;
                     }
 
-                    //reload the entire board
-                    $("#partialBoard").load("/Game/GetBoard", function (response, status, xhr) {
-                        console.log("boardView has been updated, was ", status);
+                    if (revealedCellsArray.length == 0) {
+                        console.log("the click didnt affect anything.");
+                    }
 
+                    let boardView = $("#board")[0];
+                    revealedCellsArray.forEach(function (cell) {
+                        console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
+                        let affectedPartialCell = boardView.children[cell.Row].children[cell.Column]
+
+                        //refresh every cell, that has been affected, by reloading its partialCell
+                        $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (response, status, xhr) {
+                            if (status !== "success") {
+                                console.warn(`error on ${cell.Column, cell.Row}: ${xhr}`);
+                                return;
+                            }
+
+                            //change class if it has no bombs around it and make it uninteractable
+                            if (cell.IsRevealed && cell.NeighboringBombs == 0) {
+                                affectedPartialCell.firstElementChild.className = "empty cell";
+                            }
+                        });
+                    });
+
+
+                    //check if round is finished
+                    $.get("/Game/GetIsRoundFinished", function (isFinished, status) {
                         if (status !== "success") {
-                            console.warn(xhr);
+                            console.warn(isFinished);
                             return;
                         }
-                        refreshBoardStats(this.children[0]);
 
-                        //check if round is finished
-                        $.get("/Game/GetIsFinished", function (isFinished, status) {
-                            if (status !== "success") {
-                                console.warn(isFinished);
-                                return;
-                            }
+                        _boardIsRoundFinished = isFinished;
 
-                            _boardIsRoundFinished = isFinished;
-                            if (isFinished) {     //check if round was won
-                                $.get("/Game/GetIsWon", function (isRoundWon, status) {
-                                    if (status !== "success") {
-                                        console.warn(isRoundWon);
-                                        return;
+                        if (isFinished) { 
+                            let isRoundWon;
+
+                            $.get("/Game/GetIsRoundWon", function (response, status) {         //check if round was won
+                                if (status !== "success") {
+                                    console.warn(response);
+                                    return;
+                                }
+                                isRoundWon = response;
+
+                                //add one or two classes for finishing the round, either from losing or winning
+                                $(".partialCell > button").each(function (i, cellView) {
+                                    $(cellView.parentElement).off("click contextmenu mouseenter mouseleave");
+
+                                    let currentCellModel = JSON.parse(cellView.dataset.model);
+                                    if (currentCellModel.IsRevealed && currentCellModel.NeighboringBombs == 0) {
+                                        cellView.className = "empty cell";
                                     }
 
-                                    //add one or two classes for finishing the round, either from losing or winning
-                                    $(".partialCell > button").each(function () {
-                                        cellModel = JSON.parse(this.dataset.model);
-                                        if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
-                                            this.className = "empty cell";
-                                        }
+                                    $(cellView).addClass(isRoundWon ? "won-game finished" : "finished");
+                                });
+                            });
 
-                                        $(this).addClass(isRoundWon ? "won-game finished" : "finished");
+                            //get and show every bomb
+                            $.getJSON("/Game/GetBombs", function (bombsArray, status) {
+                                if (status !== "success") {
+                                    console.warn(bombsArray);
+                                    return;
+                                }
+
+                                let boardView = $("#board")[0];
+                                bombsArray.forEach(function (cell) {
+                                    let affectedPartialCell = boardView.children[cell.Row].children[cell.Column];
+
+                                    //show every bomb by reloading its partialCell
+                                    $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (response, status, xhr) {
+                                        if (status !== "success") {
+                                            console.warn(`error on ${cell.Column, cell.Row}: ${xhr}`);
+                                            return;
+                                        }
+                                        console.log("c", cell.Column, "r", cell.Row, "was a bomb and is now revealed.");
+                                        $(affectedPartialCell.firstElementChild).addClass(isRoundWon ? "won-game finished" : "finished");
                                     });
                                 });
-                                return;
-                            }
 
-                            refreshCellEvents();            //partialBoard has been reloaded, add every event to each partial cell again.
-                        });
+                                if (isRoundWon) {       //congratulate player (yoy)
+                                    changeTitles("Board Finished!", ["Awesome!", "Congrats!!", "Amazing!!!"]);
+                                } else {                //gg (gitgud)
+                                    changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);   
+                                }
+                            });
+                        }
+                    });
+
+                    //get the current boardModel to update all stat elements
+                    $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
+                        if (status !== "success") {
+                            console.warn(boardModel);
+                            return;
+                        }
+                        refreshBoardStats(boardModel);
                     });
                 });
             },
 
-            contextmenu: function (e) {
-                $(partialCell).load("/Game/ToggleFlag", { myColumn: cellModel.Column, myRow: cellModel.Row }, (response, status, xhr) => {
-                    console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
-
+            contextmenu: function () {
+                $.post("/Game/ToggleFlag", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (wasToggled, status) {
                     if (status != "success") {
                         console.warn(xhr);
                         return;
                     }
 
-                    cellView = partialCell.firstElementChild;
-                    cellModel = JSON.parse(cellView.dataset.model);
+                    if (!wasToggled) {
+                        console.log("this flag toggled on cell in c", cellModel.Column, " r", cellModel.Row, " didnt do jack!!");
+                        return;
+                    }
 
-                    $.get("/Game/GetSetFlagCount", (setFlagCount, status) => {
+                    console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
+                    $(partialCell).load("/Game/GetCellView", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (response, status, xhr) {
                         if (status != "success") {
-                            console.warn(setFlagCount);
+                            console.warn(xhr);
                             return;
                         }
 
-                        refreshAfterFlagToggle(setFlagCount);
+                        cellModel = JSON.parse(partialCell.firstElementChild.dataset.model);
+
+                        $.get("/Game/GetSetFlagCount", (setFlagCount, status) => {
+                            if (status != "success") {
+                                console.warn(setFlagCount);
+                                return;
+                            }
+
+                            refreshAfterFlagToggle(setFlagCount);
+                         });
                     });
                 });
             },
 
             mouseenter: function () {
-                ToggleClassOnHover(cellModel, partialCell.parentElement.parentElement, true);
+                ToggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, true);
             },
 
             mouseleave: function () {
-                ToggleClassOnHover(cellModel, partialCell.parentElement.parentElement, false);
+                ToggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, false);
             }
         });
     });

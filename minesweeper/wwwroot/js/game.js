@@ -9,7 +9,7 @@ let _lifesStat;
 $(document).ready(function () {
     console.log("document is ready");
 
-    getPartialBoard("GetBoard");
+    getPartialBoard("GetBoardView");
     $("#partialBoard").contextmenu(function(e) { e.preventDefault(); })
     $(".buttons .resetsGame").click(function() { resetGame(this); });
 
@@ -60,7 +60,7 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
 
 
 /**
- * Always loads the #partialBoard element with a new Board.
+ * Loads the #partialBoard element with a new Board, calls refreshCellEvents() and changeTitlesOnLoss().
  * Additional things happen if these specified parameters are defined:
  *    - column & row: resets with custom size
  *    - customLifeCount: resets with different life count, column and row are required.
@@ -68,7 +68,7 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
  */
 function getPartialBoard(endPoint, column, row, customLifesCount) {
     $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (response, stat, xhr) {
-        console.log("Server response was", stat);
+        console.log(`Server to endPoint: ${endPoint} response was`, stat);
 
         if (stat !== "success") {
             console.warn("xhr:", xhr);
@@ -84,9 +84,13 @@ function getPartialBoard(endPoint, column, row, customLifesCount) {
 /**
  * Refreshes the current statistics shown to the player.
  */
-function refreshBoardStats(currentBoardView) {
+function refreshBoardStats(currentBoard) {
+    if (currentBoard.id) {
+        _boardModel = JSON.parse(currentBoard.dataset.model);
+    } else {
+        _boardModel = currentBoard;
+    }
     console.log("boardModel has been updated to current")
-    _boardModel = JSON.parse(currentBoardView.dataset.model);
 
     refreshAfterFlagToggle(_boardModel.SetFlagCount);
     _lifesStat.textContent = `Lifes: ${_boardModel.LifeCount}`;
@@ -183,9 +187,9 @@ function changeTitlesOnLoss() {
             return;
         }
 
-        if (lossStreakCount == 0) {
-            return;
-        }
+        //if (lossStreakCount == 0) {
+        //    return;
+        //}
 
         changeTitles("Good luck!", [lossStreakCount + 1 + (lossStreakCount + 1 == 1 ? "st " :
                                                 lossStreakCount + 1 == 2 ? "nd " :
