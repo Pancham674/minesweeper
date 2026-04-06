@@ -89,9 +89,9 @@ namespace minesweeper.Controllers
 			return _board.IsRoundWon();
 		}
 
-		public bool GetHasRoundStarted()
+		public bool IsRoundActive()
 		{
-			return _board.HasRoundStarted;
+			return _board.IsRoundActive;
 		}
 	}
 }

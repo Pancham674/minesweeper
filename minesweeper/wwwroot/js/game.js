@@ -34,8 +34,8 @@ $(document).ready(function () {
 * Will not change life count stat if its undefined.
 */
 function resetGame(sender, customColumn, customRow, customLifesCount) {
-    $.get("/Game/GetHasRoundStarted", function (hasRoundStarted, status) {
-        console.log(`GetHasRoundStarted from server was ${hasRoundStarted}`);
+    $.get("/Game/IsRoundActive", function (hasRoundStarted, status) {
+        console.log(`IsRoundActive from server was ${status}`);
         if (status !== "success") {
             console.warn(hasRoundStarted);
             return;
@@ -58,7 +58,6 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
         console.log("Game has been reset");
     });
 }
-
 
 /**
  * Loads the #partialBoard element with a new Board, calls refreshCellEvents() and changeTitlesOnLoss().
@@ -135,14 +134,18 @@ function ToggleClassOnHover(cellModel, boardView, isHovering) {
  */
 function confirmCustomSize() {
     let customRow = $("#customRow")[0];
-    let customColumn = $("#customColumn")[0];
+    let customCol = $("#customColumn")[0];
 
-    if (isNaN(parseInt(customRow.value)) || isNaN(parseInt(customColumn.value))) {
-        alert("Please choose a value between "+ customColumn.min +" and "+ customColumn.max +".");
+    let customColValue = parseInt(customCol.value);
+    let customRowValue = parseInt(customRow.value);
+
+    if (isNaN(customColValue) || customCol.min > customColValue || customCol.max < customColValue ||
+        isNaN(customRowValue) || customRow.min > customRowValue || customRow.max < customRowValue) {
+        alert("Please choose a value between "+ customCol.min +" and "+ customCol.max +".");
         return;
     }
 
-    resetGame(this, customColumn.value, customRow.value);
+    resetGame(this, customColValue, customRowValue);
 }
 
 /**
@@ -150,13 +153,14 @@ function confirmCustomSize() {
  */
 function confirmLifeAmount() {
     let customLifes = $("#customLifes")[0];
+    let customLifesValue = parseInt(customLifes.value);
 
-    if (isNaN(parseInt(customLifes.value))) {
+    if (isNaN(customLifesValue) || customLifes.min > customLifesValue || customLifes.max < customLifesValue) {
         alert("Please choose a life amount between "+ customLifes.min +" and "+ customLifes.max +".");
         return;
     }
 
-    resetGame(this, _boardModel.Columns, _boardModel.Rows, customLifes.value);
+    resetGame(this, _boardModel.Columns, _boardModel.Rows, customLifesValue);
 }
 
 /**

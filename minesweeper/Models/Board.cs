@@ -6,20 +6,20 @@ public class Board
 	int _rows;
 	int _columns;
 	int _bombsCount;
-	int _cellsCount;
-
-	bool _hasRoundStarted;
 	long _revealedCellsCount;
 	
 	int _lifeCount;
 	int _setFlagCount;
-	static int _lossStreakCount;
-	static int _originalLifeCount;
-
-	Random _randon = new Random();
 
 	Cell[,] _cells;
 	RoundSummary _summary;
+
+	static int _cellsCount;
+	static bool _isRoundActive;			//todo: replace this with enum containing these active states: running, not started, won, lost, paused. Will replace methods IsRoundLost and -Won
+
+	static int _lossStreakCount;
+	static int _originalLifeCount;
+	static Random _randon = new Random();
 
 	/// <summary>
 	/// Standard constructor, will initialize a random count between 5 to 15 for colums and rows
@@ -65,15 +65,15 @@ public class Board
 		_bombsCount = (int)Math.Round(_cellsCount / 4f);
 
 		_summary = new RoundSummary();
-		ResetUserStats();
 		InitCells();
+		ResetUserStats();
 	}
 
 	public void ResetUserStats()
 	{
 		_setFlagCount = 0;
 		_revealedCellsCount = 0;
-		_hasRoundStarted = false;
+		_isRoundActive = false;
 		_lifeCount = _originalLifeCount;
 	}
 
@@ -159,7 +159,7 @@ public class Board
 
 	public List<Cell> CellClicked(int myColumn, int myRow)
 	{
-		_hasRoundStarted = true;
+		_isRoundActive = true;
 		List<Cell> affectedCells = new List<Cell>();
 		CellClicked(_cells[myColumn, myRow], ref affectedCells);
 		return affectedCells;
@@ -339,7 +339,13 @@ public class Board
 	/// <returns>True, if the round has been lost, otherwise false, meaning that its won or still running.</returns>
 	public bool IsRoundLost()
 	{
-		return _lifeCount <= 0;
+		if (LifeCount <= 0)
+		{
+			_isRoundActive = false;
+			return true;
+		}
+
+		return false;
 	}
 
 	/// <returns>True, if the round has been won, otherwise false, meaning that its lost or still running.</returns>
@@ -354,6 +360,8 @@ public class Board
 				break;
 			}
 		}
+
+		_isRoundActive = !isWon;
 		return isWon;
 	}
 
@@ -367,7 +375,7 @@ public class Board
 	/// Shows us how many non bombs there are
 	/// </summary>
 	public long RevealedCellsCount { get => _revealedCellsCount; }
-	public bool HasRoundStarted { get => _hasRoundStarted; }
+	public bool IsRoundActive { get => _isRoundActive; }
 	public int BombsCount
 {
 		get => _bombsCount;
