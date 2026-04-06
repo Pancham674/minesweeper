@@ -5,8 +5,8 @@ public class Board
 {
 	int _rows;
 	int _columns;
-	int _bombCount;
-	int _cellCount;
+	int _bombsCount;
+	int _cellsCount;
 
 	bool _hasRoundStarted;
 	long _revealedCellsCount;
@@ -61,8 +61,8 @@ public class Board
 		_rows = myRows;
 		_cells = new Cell[_columns, _rows];
 
-		_cellCount = _rows * _columns;
-		_bombCount = (int)Math.Round(_cellCount / 4f);
+		_cellsCount = _rows * _columns;
+		_bombsCount = (int)Math.Round(_cellsCount / 4f);
 
 		_summary = new RoundSummary();
 		ResetUserStats();
@@ -99,31 +99,19 @@ public class Board
 	{
 		foreach (Cell currentCell in _cells)
 		{   //ignore bombs since they shouldnt have numbers
-			if (currentCell.IsBomb)
-			{
-				continue;
-			}
+			if (currentCell.IsBomb) { continue; }
 
 			int neighboringBombs = 0;
 
 			//will check the rows between the current myCell (row-1 = upper myCell, row+1 = lower myCell)
 			for (int c = currentCell.Column - 1; c < currentCell.Column + 2; c++)
-			{
-				//prevent going outside of the board index
-				if (c < 0 || c > _columns - 1)
-				{
-					continue;
-				}
-
+			{	//prevent going outside of the board index
+				if (c < 0 || c > _columns - 1) { continue; }
 
 				//will check the columns beside the current myCell (col-1 = left myCell, col+1 = right myCell)
 				for (int r = currentCell.Row - 1; r < currentCell.Row + 2; r++)
-				{
-					//prevent going outside of the board index and ignore self
-					if (r < 0 || r > _rows - 1 || (c == currentCell.Column && r == currentCell.Row))
-					{
-						continue;
-					}
+				{   //prevent going outside of the board index and ignore self
+					if (r < 0 || r > _rows - 1 || (c == currentCell.Column && r == currentCell.Row)) { continue; }
 
 					neighboringBombs = _cells[c, r].IsBomb ? neighboringBombs + 1 : neighboringBombs;
 				}
@@ -138,7 +126,7 @@ public class Board
 	/// </summary>
 	Queue<bool> InitBombList()
 	{
-		int tmpBombs = _bombCount;
+		int tmpBombs = _bombsCount;
 		int boardSize = _rows * _columns;
 		bool[] bombList = new bool[boardSize];
 
@@ -152,10 +140,7 @@ public class Board
 				bombList[i] = true;
 				tmpBombs--;
 			}
-			else
-			{
-				bombList[i] = false;
-			}
+			else { bombList[i] = false; }
 		}
 
 		//...but it may not have _bombCount amount of bombs, so put in the rest till tmpBombs is 0
@@ -185,10 +170,7 @@ public class Board
 	/// </summary>
 	void CellClicked(Cell myCell, ref List<Cell> myRevealedCells)
 	{
-		if (myCell.IsFlagged)
-		{
-			return;
-		}
+		if (myCell.IsFlagged) { return; }
 		else if (myCell.IsBomb)
 		{
 			_lifeCount--;
@@ -204,8 +186,9 @@ public class Board
 				RevealBombs();
 				return;
 			}
+
 			//this will be incremented in a few lines even though it shouldnt be affected when bombs are clicked
-			_revealedCellsCount--;			//so a lazy fix
+			//_revealedCellsCount--;			//so a lazy fix lol
 		}
 		else if (myCell.IsRevealed)
 		{
@@ -215,7 +198,7 @@ public class Board
 
 		myCell.IsRevealed = true;
 		myRevealedCells.Add(myCell);
-		_revealedCellsCount++;
+		_revealedCellsCount = myCell.IsBomb ? _revealedCellsCount : _revealedCellsCount + 1;
 
 		if (myCell.NeighboringBombs == 0)
 		{
@@ -240,26 +223,17 @@ public class Board
 
 		//loop around cellModels neigbors
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
-		{
-			if (cCol < 0 || cCol > _columns - 1)
-			{   //dont go out of the board
-				continue;
-			}
+		{   //dont go out of the board
+			if (cCol < 0 || cCol > _columns - 1) { continue; }
 
 			for (int cRow = myCell.Row - 1; cRow < myCell.Row + 2; cRow++)
-			{
-				if (cRow < 0 || cRow > _rows - 1)
-				{   //dont go out of the board
-					continue;
-				}
+			{   //dont go out of the board
+				if (cRow < 0 || cRow > _rows - 1) { continue; }
 
 				Cell neighbor = _cells[cCol, cRow];
 
 				//ignore self
-				if (neighbor == myCell)
-				{
-					continue;
-				}
+				if (neighbor == myCell) { continue; }
 
 				flaggedNeighbors = neighbor.IsFlagged ? flaggedNeighbors + 1 : flaggedNeighbors;
 				neighbors.Add(neighbor);
@@ -271,10 +245,7 @@ public class Board
 		{
 			foreach (Cell neighbor in neighbors)
 			{	//ignore revealed and flagged cells
-				if (neighbor.IsRevealed || neighbor.IsFlagged)
-				{
-					continue;
-				}
+				if (neighbor.IsRevealed || neighbor.IsFlagged) { continue; }
 
 				//uncover neigbors
 				CellClicked(neighbor, ref myRevealedCells);
@@ -283,8 +254,8 @@ public class Board
 	}
 
 	void RevealNeighboringCells(Cell myCell, ref List<Cell> myRevealedCells)
-	{
-		RevealNeighboringCells(myCell);
+	{   //RevealCellsWithNoBombsAround(myCell) is O(cell * neighbor of cell (3-8) * (neighbor))  but thanks to this is also O(_cellsCount)
+		RevealCellsWithNoBombsAround(myCell);
 
 		foreach (Cell cell in _cells)
 		{
@@ -298,30 +269,21 @@ public class Board
 	/// <summary>
 	/// Reveal neighbors of myCell if the neighbor itself has no neigboringBombs, aka a 0 cell.
 	/// </summary>
-	/// <param name="myCell"></param>
-	void RevealNeighboringCells(Cell myCell)
+	/// <param name="myCell">The cell with no bombs as neighbors</param>
+	void RevealCellsWithNoBombsAround(Cell myCell)
 	{	//loop around cellModels neigbors
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
-		{
-			if (cCol < 0 || cCol > _columns - 1)
-			{   //dont go out of the board
-				continue;
-			}
+		{   //dont go out of the board
+			if (cCol < 0 || cCol > _columns - 1) { continue; }
 
 			for (int cRow = myCell.Row - 1; cRow < myCell.Row + 2; cRow++)
-			{
-				if (cRow < 0 || cRow > _rows - 1)
-				{   //dont go out of the board
-					continue;
-				}
+			{   //dont go out of the board
+				if (cRow < 0 || cRow > _rows - 1) { continue; }
 
 				Cell neighbor = _cells[cCol, cRow];
 
-				//ignore self and uncovered cells
-				if (neighbor == myCell || neighbor.IsRevealed)
-				{
-					continue;
-				}
+				//ignore self and revealed cells
+				if (neighbor == myCell || neighbor.IsRevealed) { continue; }
 
 				neighbor.IsRevealed = true;
 				_revealedCellsCount++;
@@ -333,10 +295,10 @@ public class Board
 					neighbor.IsFlagged = false;
 				}
 
-				//continue uncovering cells that have no bombs as neigbors!!!
+				//continue revealing cells that have no bombs as neigbors!!!
 				if (neighbor.NeighboringBombs == 0)
 				{
-					RevealNeighboringCells(neighbor);		//i LOVE recursion!!!!!
+					RevealCellsWithNoBombsAround(neighbor);		//i LOVE recursion!!!!!
 				}
 			}
 		}
@@ -350,22 +312,18 @@ public class Board
 	{
 		Cell cell = _cells[myColumn, myRow];
 
-		if (cell.IsRevealed)
-		{
-			return false;
-		}
+		if (cell.IsRevealed) { return false; }	//dont toggle on revealed cells
 
 		if (cell.IsFlagged)                     //remove the flag
 		{
 			_setFlagCount--;
 			cell.IsFlagged = false;
 		}
-		else if (_setFlagCount < _bombCount)    //only add a flag if the amount of set flags is lesser than the amount of bombs
+		else if (_setFlagCount < _bombsCount)    //only add a flag if the amount of set flags is lesser than the amount of bombs
 		{
 			_setFlagCount++;
 			cell.IsFlagged = true;
 		}
-
 		return true;
 	}
 
@@ -416,15 +374,15 @@ public class Board
 
 	public int Rows	{ get => _rows; }
 	public int Columns { get => _columns; }
-	public int BombCount
+	public int BombsCount
 	{
-		get => _bombCount;
-		set => _bombCount = value; 
+		get => _bombsCount;
+		set => _bombsCount = value; 
 	}
-	public int CellCount { get => _cellCount; }
+	public int CellsCount { get => _cellsCount; }
 	public int SetFlagCount { get => _setFlagCount; }
 	public int LifeCount { get => _lifeCount; }
-	public long RevealedCellCount { get => _revealedCellsCount; }
+	public long RevealedCellsCount { get => _revealedCellsCount; }
 	public int LossStreakCount { get => _lossStreakCount; }
 	public bool HasRoundStarted { get => _hasRoundStarted; }
 	[JsonIgnore]

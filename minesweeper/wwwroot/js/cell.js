@@ -46,7 +46,7 @@ function refreshCellEvents() {
                     });
 
 
-                    //check if round is lost
+                    //check if round is lost and call OnRoundFinished
                     $.get("/Game/GetIsRoundLost", function (isRoundLost, status) {
                         if (status !== "success") {
                             console.warn("GetIsRoundLost from server resulted in an error:", isRoundLost);
@@ -55,11 +55,11 @@ function refreshCellEvents() {
 
                         if (isRoundLost) {
                             _boardIsRoundFinished = true;
-                            disableEveryCellViewOnRoundFinished(!isRoundLost);
+                            OnRoundFinished(!isRoundLost);
                             return;
                         }
 
-                        //if its not lost then check if its won
+                        //check if its won instead and call OnRoundFinished too, otherwise round is still active
                         $.get("/Game/GetIsRoundWon", function (isRoundWon, status) {
                             if (status !== "success") {
                                 console.warn("GetIsRoundWon from server resulted in an error:", response);
@@ -68,7 +68,7 @@ function refreshCellEvents() {
 
                             if (isRoundWon) {
                                 _boardIsRoundFinished = true;
-                                disableEveryCellViewOnRoundFinished(isRoundWon);
+                                OnRoundFinished(isRoundWon);
                                 return;
                             }
                             _boardIsRoundFinished = false;
@@ -131,48 +131,31 @@ function refreshCellEvents() {
 }
 
 /**
- * 
+ * Shows every bomb and removes every eventHandler from all cellViews
  */
-function disableEveryCellViewOnRoundFinished(isRoundWon) {
+function OnRoundFinished(isRoundWon) {
     //adds one or two classes for finishing the round, either from losing or winning
     $(".partialCell > button").each(function (i, cellView) {
         $(cellView.parentElement).off("click contextmenu mouseenter mouseleave");
 
-        let currentCellModel = JSON.parse(cellView.dataset.model);
-        if (currentCellModel.IsRevealed && currentCellModel.NeighboringBombs == 0) {
+        let cellModel = JSON.parse(cellView.dataset.model);
+        $(cellView).addClass(isRoundWon ? "won-game finished" : "finished");
+
+        if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
             cellView.className = "empty cell";
         }
-
-        $(cellView).addClass(isRoundWon ? "won-game finished" : "finished");
-    });
-
-    //get and show every bomb
-    $.getJSON("/Game/GetBombs", function (bombsArray, status) {
-        if (status !== "success") {
-            console.warn("GetBombs from server occured in an error:", bombsArray);
-            return;
-        }
-
-        let boardView = $("#board")[0];
-        bombsArray.forEach(function (cell) {
-            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column];
-
-            //show every bomb by reloading its partialCell
-            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
-                let consoleText = `c ${cell.Column}  r ${cell.Row}`;
+        else if (cellModel.IsBomb) {      //reload that bomb, currentCellModel.IsRevealed is inaccurate
+            let affectedPartialCell = cellView.parentElement;
+            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (_, status, xhr) {
+                let consoleText = `c ${cellModel.Column}  r ${cellModel.Row}`;
                 if (status !== "success") {
-                    console.warn("GetCellView for", consoleText,"from server occured in an error:", xhr);
+                    console.warn("GetCellView for", consoleText, "from server occured in an error:", xhr);
                     return;
                 }
-                console.log(consoleText, "was a bomb and is now revealed.");
-                $(affectedPartialCell.firstElementChild).addClass(isRoundWon ? "won-game finished" : "finished");
-            });
-        });
 
-        if (isRoundWon) {       //congratulate player (yoy)
-            changeTitles("Board Finished!", ["Awesome!", "Congrats!!", "Amazing!!!"]);
-        } else {                //gg (gitgud)
-            changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
+                $(affectedPartialCell.firstElementChild).addClass(isRoundWon ? "won-game finished" : "finished");    //readd it cuz we just reloaded it
+                console.log(consoleText, "was a bomb and is now revealed.");
+            });
         }
     });
 }

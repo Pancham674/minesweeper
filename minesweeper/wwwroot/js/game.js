@@ -88,18 +88,19 @@ function getPartialBoard(endPoint, column, row, customLifesCount) {
 function refreshBoardStats(currentBoard) {
     if (currentBoard.id) {
         _boardModel = JSON.parse(currentBoard.dataset.model);
-    } else {
-        _boardModel = currentBoard;
-    }
+    } else { _boardModel = currentBoard; }
+
     console.log("boardModel has been updated to current")
 
     refreshAfterFlagToggle(_boardModel.SetFlagCount);
     _lifesStat.textContent = `Lifes: ${_boardModel.LifeCount}`;
-    _boardProgressStat.textContent = `Covered Cells: ${(_boardModel.CellCount - _boardModel.BombCount) - _boardModel.RevealedCellCount}/${_boardModel.CellCount - _boardModel.BombCount}`;
+
+    let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
+    _boardProgressStat.textContent = `Covered Cells: ${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
 }
 
 function refreshAfterFlagToggle(currentSetFlagCount) {
-    _remainingFlagsStat.textContent = `Remaining flags: ${_boardModel.BombCount - currentSetFlagCount}/${_boardModel.BombCount}`;
+    _remainingFlagsStat.textContent = `Remaining flags: ${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
 
 /**
@@ -108,35 +109,23 @@ function refreshAfterFlagToggle(currentSetFlagCount) {
  */
 function ToggleClassOnHover(cellModel, boardView, isHovering) {
     //only neighbors of revealed cells should be marked
-    if (!cellModel.IsRevealed) {
-        return;
-    }
+    if (!cellModel.IsRevealed) { return; }
 
     //loop around cellModels neighbors
     for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {
-        if (col < 0 || col > _boardModel.Columns - 1) {           //dont go out of the board
-            continue;
-        }
+        if (col < 0 || col > _boardModel.Columns - 1) { continue; }         //dont go out of the board
 
         for (let row = cellModel.Row - 1; row < cellModel.Row + 2; row++) {
-            if (row < 0 || row > _boardModel.Rows - 1) {          //dont go out of the board
-                continue;
-            }
+            if (row < 0 || row > _boardModel.Rows - 1) { continue; }        //dont go out of the board
 
             const neighborView = boardView.children[row].children[col].firstElementChild;
             const neighborModel = JSON.parse(neighborView.dataset.model);
 
             //ignore self, revealed cells and flagged cells since they shouldnt be marked/affected by chords
-            if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
-                continue;
-            }
+            if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) { continue; }
 
-            if (isHovering) {
-                $(neighborView).addClass("hovering");
-            }
-            else {
-                $(neighborView).removeClass("hovering");
-            }
+            if (isHovering) { $(neighborView).addClass("hovering"); }
+            else { $(neighborView).removeClass("hovering"); }
         }
     }
 }
@@ -188,10 +177,6 @@ function changeTitlesOnLoss() {
             console.warn(lossStreakCount);
             return;
         }
-
-        //if (lossStreakCount == 0) {
-        //    return;
-        //}
 
         changeTitles("Good luck!", [lossStreakCount + 1 + (lossStreakCount + 1 == 1 ? "st " :
                                                            lossStreakCount + 1 == 2 ? "nd " :
