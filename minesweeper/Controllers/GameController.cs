@@ -14,6 +14,8 @@ namespace minesweeper.Controllers
 		public IActionResult Start()
 		{ 
 			_board.InitCells();
+			_board.ResetUserStats();
+			_board.LossStreakCount = 0;
 			return View("Game", _board);
 		}
 

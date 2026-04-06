@@ -69,12 +69,12 @@ public class Board
 		InitCells();
 	}
 
-	void ResetUserStats()
+	public void ResetUserStats()
 	{
-		_lifeCount = _originalLifeCount;
 		_setFlagCount = 0;
 		_revealedCellsCount = 0;
 		_hasRoundStarted = false;
+		_lifeCount = _originalLifeCount;
 	}
 
 	public void InitCells()
@@ -160,15 +160,16 @@ public class Board
 	public List<Cell> CellClicked(int myColumn, int myRow)
 	{
 		_hasRoundStarted = true;
-		List<Cell> revealedCells = new List<Cell>();
-		CellClicked(_cells[myColumn, myRow], ref revealedCells);
-		return revealedCells;
+		List<Cell> affectedCells = new List<Cell>();
+		CellClicked(_cells[myColumn, myRow], ref affectedCells);
+		return affectedCells;
 	}
-	
+
 	/// <summary>
 	/// Performs different actions based on the attributes of myCell.
 	/// </summary>
-	void CellClicked(Cell myCell, ref List<Cell> myRevealedCells)
+	/// <param name="myAffectedCells">If a cell gets revealed then itll be added to this list to be shown in the View later.</param>
+	void CellClicked(Cell myCell, ref List<Cell> myAffectedCells)
 	{
 		if (myCell.IsFlagged) { return; }
 		else if (myCell.IsBomb)
@@ -186,23 +187,20 @@ public class Board
 				RevealBombs();
 				return;
 			}
-
-			//this will be incremented in a few lines even though it shouldnt be affected when bombs are clicked
-			//_revealedCellsCount--;			//so a lazy fix lol
 		}
 		else if (myCell.IsRevealed)
 		{
-			Chord(myCell, ref myRevealedCells);
+			Chord(myCell, ref myAffectedCells);
 			return;
 		}
 
 		myCell.IsRevealed = true;
-		myRevealedCells.Add(myCell);
+		myAffectedCells.Add(myCell);
 		_revealedCellsCount = myCell.IsBomb ? _revealedCellsCount : _revealedCellsCount + 1;
 
 		if (myCell.NeighboringBombs == 0)
 		{
-			RevealNeighboringCells(myCell, ref myRevealedCells);
+			RevealCellsWithNoBombsAround(myCell, ref myAffectedCells);
 		}
 
 		if (IsRoundWon())
@@ -216,7 +214,7 @@ public class Board
 	/// <summary>
 	/// Reveals neighbors of myCell if the flags on the neighbors is equal/greater than myCell.NeighboringBombs.
 	/// </summary>
-	public void Chord(Cell myCell, ref List<Cell> myRevealedCells)
+	public void Chord(Cell myCell, ref List<Cell> myAffectedCells)
 	{
 		int flaggedNeighbors = 0;
 		List<Cell> neighbors = new List<Cell>();
@@ -248,20 +246,7 @@ public class Board
 				if (neighbor.IsRevealed || neighbor.IsFlagged) { continue; }
 
 				//uncover neigbors
-				CellClicked(neighbor, ref myRevealedCells);
-			}
-		}
-	}
-
-	void RevealNeighboringCells(Cell myCell, ref List<Cell> myRevealedCells)
-	{   //RevealCellsWithNoBombsAround(myCell) is O(cell * neighbor of cell (3-8) * (neighbor))  but thanks to this is also O(_cellsCount)
-		RevealCellsWithNoBombsAround(myCell);
-
-		foreach (Cell cell in _cells)
-		{
-			if (cell.IsRevealed && !myRevealedCells.Contains(cell))
-			{
-				myRevealedCells.Add(cell);
+				CellClicked(neighbor, ref myAffectedCells);
 			}
 		}
 	}
@@ -270,7 +255,7 @@ public class Board
 	/// Reveal neighbors of myCell if the neighbor itself has no neigboringBombs, aka a 0 cell.
 	/// </summary>
 	/// <param name="myCell">The cell with no bombs as neighbors</param>
-	void RevealCellsWithNoBombsAround(Cell myCell)
+	void RevealCellsWithNoBombsAround(Cell myCell, ref List<Cell> myAffectedCells)
 	{	//loop around cellModels neigbors
 		for (int cCol = myCell.Column - 1; cCol < myCell.Column + 2; cCol++)
 		{   //dont go out of the board
@@ -288,6 +273,8 @@ public class Board
 				neighbor.IsRevealed = true;
 				_revealedCellsCount++;
 
+				if (!myAffectedCells.Contains(neighbor)) { myAffectedCells.Add(neighbor); }
+
 				//give player their flag back
 				if (neighbor.IsFlagged)
 				{
@@ -296,10 +283,7 @@ public class Board
 				}
 
 				//continue revealing cells that have no bombs as neigbors!!!
-				if (neighbor.NeighboringBombs == 0)
-				{
-					RevealCellsWithNoBombsAround(neighbor);		//i LOVE recursion!!!!!
-				}
+				if (neighbor.NeighboringBombs == 0) { RevealCellsWithNoBombsAround(neighbor, ref myAffectedCells); }
 			}
 		}
 	}
@@ -307,7 +291,7 @@ public class Board
 	/// <summary>
 	/// Either adds or sets a flag on a specific cell.
 	/// </summary>
-	/// <returns>True, if the flag was toggled, otherwise false.</returns>
+	/// <returns>True, if the flag was toggled, otherwise false, meaning that nothing happened.</returns>
 	public bool ToggleFlag(int myColumn, int myRow)
 	{
 		Cell cell = _cells[myColumn, myRow];
@@ -324,6 +308,7 @@ public class Board
 			_setFlagCount++;
 			cell.IsFlagged = true;
 		}
+		else { return false; }
 		return true;
 	}
 
@@ -374,17 +359,26 @@ public class Board
 
 	public int Rows	{ get => _rows; }
 	public int Columns { get => _columns; }
-	public int BombsCount
-	{
-		get => _bombsCount;
-		set => _bombsCount = value; 
-	}
+
 	public int CellsCount { get => _cellsCount; }
 	public int SetFlagCount { get => _setFlagCount; }
 	public int LifeCount { get => _lifeCount; }
+	/// <summary>
+	/// Shows us how many non bombs there are
+	/// </summary>
 	public long RevealedCellsCount { get => _revealedCellsCount; }
-	public int LossStreakCount { get => _lossStreakCount; }
 	public bool HasRoundStarted { get => _hasRoundStarted; }
+	public int BombsCount
+{
+		get => _bombsCount;
+		set => _bombsCount = value; 
+	}
+	public int LossStreakCount 
+	{ 
+		get => _lossStreakCount;
+		set => _lossStreakCount = value;
+	}
+	
 	[JsonIgnore]
 	public Cell[,] Cells { get => _cells; }
 	

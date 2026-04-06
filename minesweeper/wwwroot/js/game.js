@@ -63,12 +63,12 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
 /**
  * Loads the #partialBoard element with a new Board, calls refreshCellEvents() and changeTitlesOnLoss().
  * Additional things happen if these specified parameters are defined:
- *    - column & row: resets with custom size
+ *    - column & row: resets with new custom size
  *    - customLifeCount: resets with different life count, column and row are required.
  * endPoint is required for all.
  */
 function getPartialBoard(endPoint, column, row, customLifesCount) {
-    $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (response, stat, xhr) {
+    $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (_, stat, xhr) {
         console.log(`${endPoint} from server was ${stat}`);
 
         if (stat !== "success") {
@@ -109,7 +109,7 @@ function refreshAfterFlagToggle(currentSetFlagCount) {
  */
 function ToggleClassOnHover(cellModel, boardView, isHovering) {
     //only neighbors of revealed cells should be marked
-    if (!cellModel.IsRevealed) { return; }
+    if (!cellModel.IsRevealed || cellModel.IsExploded) { return; }
 
     //loop around cellModels neighbors
     for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {
