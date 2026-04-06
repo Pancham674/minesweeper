@@ -35,6 +35,7 @@ $(document).ready(function () {
 */
 function resetGame(sender, customColumn, customRow, customLifesCount) {
     $.get("/Game/GetHasRoundStarted", function (hasRoundStarted, status) {
+        console.log(`GetHasRoundStarted from server was ${hasRoundStarted}`);
         if (status !== "success") {
             console.warn(hasRoundStarted);
             return;
@@ -68,7 +69,7 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
  */
 function getPartialBoard(endPoint, column, row, customLifesCount) {
     $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (response, stat, xhr) {
-        console.log(`Server to endPoint: ${endPoint} response was`, stat);
+        console.log(`${endPoint} from server was ${stat}`);
 
         if (stat !== "success") {
             console.warn("xhr:", xhr);
@@ -182,8 +183,9 @@ function changeTitles(titleText, subtitleText) {
 
 function changeTitlesOnLoss() {
     $.get("/Game/GetLossStreakCount", function (lossStreakCount, status) {
-        console.log("Retrieving LossStreakCount was "+ status);
+        console.log(`LossStreakCount from server was ${status}`);
         if (status !== "success") {
+            console.warn(lossStreakCount);
             return;
         }
 
@@ -192,9 +194,8 @@ function changeTitlesOnLoss() {
         //}
 
         changeTitles("Good luck!", [lossStreakCount + 1 + (lossStreakCount + 1 == 1 ? "st " :
-                                                lossStreakCount + 1 == 2 ? "nd " :
-                                                lossStreakCount + 1 == 3 ? "rd " :
-                                                                "th ") +
-                                                "try's a charm"]);
+                                                           lossStreakCount + 1 == 2 ? "nd " :
+                                                           lossStreakCount + 1 == 3 ? "rd " :
+                                                                                      "th ") + "try's a charm"]);
     });
 }

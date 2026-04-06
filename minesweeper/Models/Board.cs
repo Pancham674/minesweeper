@@ -198,8 +198,9 @@ public class Board
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (IsRoundFinished())
+			if (IsRoundLost())
 			{
+				_lossStreakCount++;
 				RevealBombs();
 				return;
 			}
@@ -221,8 +222,9 @@ public class Board
 			RevealNeighboringCells(myCell, ref myRevealedCells);
 		}
 
-		if (IsRoundFinished())
+		if (IsRoundWon())
 		{
+			_lossStreakCount = 0;
 			RevealBombs();
 			return;
 		}
@@ -391,35 +393,23 @@ public class Board
 		return bombs;
 	}
 
-	/// <summary>
-	/// Returns true if the game is finished either by winning or losing.
-	/// </summary>
-	/// <returns></returns>
-	public bool IsRoundFinished()
+	/// <returns>True, if the round has been lost, otherwise false, meaning that its won or still running.</returns>
+	public bool IsRoundLost()
 	{
-		if (_lifeCount <= 0)
-		{
-			_lossStreakCount++;		//todo: fix this, it gets incremented multiple times based on how many refs this method has
-			return true;
-		}
-		return IsRoundWon();
+		return _lifeCount <= 0;
 	}
 
+	/// <returns>True, if the round has been won, otherwise false, meaning that its lost or still running.</returns>
 	public bool IsRoundWon()
 	{	//assume player won
 		bool isWon = true;
 		foreach (Cell cell in _cells)
-		{	//check if there are any cells that are not bombs and not revealed (all non bombs must be revealed to win)
+		{	//until theres a cell that isnt a bomb and isnt revealed (all non bombs must be revealed to win)
 			if (!cell.IsBomb && !cell.IsRevealed)
 			{
 				isWon = false;
 				break;
 			}
-		}
-
-		if (isWon)
-		{
-			_lossStreakCount = 0;
 		}
 		return isWon;
 	}

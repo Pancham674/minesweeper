@@ -77,14 +77,14 @@ namespace minesweeper.Controllers
 			return _board.LossStreakCount;
 		}
 
-		public bool GetIsRoundFinished()
+		public bool GetIsRoundLost()
 		{
-			return _board.IsRoundFinished();
+			return _board.IsRoundLost();
 		}
 
 		public bool GetIsRoundWon()
 		{
-			return _board.IsRoundFinished() ? _board.IsRoundWon() : false;
+			return _board.IsRoundWon();
 		}
 
 		public bool GetHasRoundStarted()
