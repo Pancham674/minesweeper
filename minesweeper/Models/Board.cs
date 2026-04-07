@@ -1,4 +1,5 @@
 using minesweeper.Models;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 public class Board
@@ -48,7 +49,7 @@ public class Board
 	}
 
 	/// <summary>
-	/// Sets the cell- and bombCount depending on myColumns and myRows. Initializes an empty summary and calls InitCells() afterwards.
+	/// Sets the cell- and currentBombsCount depending on myColumns and myRows. Initializes an empty summary and calls InitializeCells() afterwards.
 	/// </summary>
 	/// <param name="myColumns"></param>
 	/// <param name="myRows"></param>
@@ -62,7 +63,7 @@ public class Board
 		_bombsCount = (int)Math.Round(_cellsCount / 4f);
 
 		_summary = new RoundSummary();
-		InitCells();
+		InitializeCells();
 		ResetUserStats();
 	}
 
@@ -74,18 +75,37 @@ public class Board
 		_lifeCount = _originalLifeCount;
 	}
 
-	public void InitCells()
+	public void InitializeCells()
 	{
-		Queue<bool> bombList = InitBombList();
+		int tmpBombs = _bombsCount;
+		bool[,] bombsLoc = new bool[_columns, _rows];
 
-		for (int c = 0; c < _columns; c++)
-		{
-			for (int r = 0; r < _rows; r++)
-			{
-				_cells[c, r] = new Cell(c, r, bombList.Dequeue());
-			}
+		while (tmpBombs > 0)
+		{   //select random cells within columns and rows to be bombs
+			int randCol = _random.Next(_columns);
+			int randRow = _random.Next(_rows);
+
+			bool wasPreviouslyBomb = bombsLoc[randCol, randRow];
+			bombsLoc[randCol, randRow] = true; ;
+
+			//if the location is a bomb now and it wasnt previously, then a new bomb was set
+			if (bombsLoc[randCol, randRow] && !wasPreviouslyBomb) { tmpBombs--; }
 		}
 
+		int currentBombsCount = 0;				//made to check if the board has the expected amount in the end
+		for (int c = 0; c < _columns; c++) {
+			for (int r = 0; r < _rows; r++)
+			{
+				_cells[c, r] = new Cell(c, r, bombsLoc[c, r]);
+				currentBombsCount = _cells[c, r].IsBomb ? currentBombsCount + 1 : currentBombsCount;
+			}
+		}
+		
+		if (currentBombsCount != _bombsCount)
+		{
+			Debug.Assert(!(currentBombsCount > _bombsCount), "There are MORE bombs than expected...");
+			Debug.Assert(!(currentBombsCount < _bombsCount), "There are LESS bombs than expected...");
+		}
 		SetCellNumber();
 	}
 
@@ -116,42 +136,6 @@ public class Board
 				currentCell.NeighboringBombs = neighboringBombs;
 			}
 		}
-	}
-
-	/// <summary>
-	/// Initializes and returns a bool Queue for the board that contains all the position of all bombs and safe cells
-	/// </summary>
-	Queue<bool> InitBombList()
-	{
-		int tmpBombs = _bombsCount;
-		int boardSize = _rows * _columns;
-		bool[] bombList = new bool[boardSize];
-
-		//after this bombList will have the correct amount of cells randomized to be bombs
-		for (int i = 0; i < boardSize; i++)
-		{
-			int randNumber = _random.Next(0, 4);
-
-			if (randNumber == 3 && tmpBombs > 0)
-			{
-				bombList[i] = true;
-				tmpBombs--;
-			}
-			else { bombList[i] = false; }
-		}
-
-		//...but it may not have _bombCount amount of bombs, so put in the rest till tmpBombs is 0
-		while (tmpBombs > 0)
-		{   //select random cells to be bombs, if its not already one
-			int randCell = _random.Next(boardSize - 1);
-			if (!bombList[randCell])
-			{
-				bombList[randCell] = true;
-				tmpBombs--;
-			}
-		}
-
-		return new Queue<bool>(bombList);           //yay
 	}
 
 	public List<Cell> CellClicked(int myColumn, int myRow)
