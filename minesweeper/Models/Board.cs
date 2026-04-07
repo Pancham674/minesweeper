@@ -75,7 +75,10 @@ public class Board
 		_lifeCount = _originalLifeCount;
 	}
 
-	public void InitializeCells()
+	/// <summary>
+	/// Initializes all cells with its location on the board and whether or not its a bomb, calls SetCellNumber afterwards.
+	/// </summary>
+	void InitializeCells()
 	{
 		int tmpBombs = _bombsCount;
 		bool[,] bombsLoc = new bool[_columns, _rows];
@@ -110,7 +113,7 @@ public class Board
 	}
 
 	/// <summary>
-	/// Assigns all cells their numbers by checking the neigbors around the myCell. Also adds a ref of them to myCell.Neigbors for chording.
+	/// Assigns all cells their numbers by checking the neigbors around it.
 	/// </summary>
 	void SetCellNumber()
 	{
