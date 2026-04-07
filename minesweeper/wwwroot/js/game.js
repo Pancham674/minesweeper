@@ -11,11 +11,11 @@ $(document).ready(function () {
 
     getPartialBoard("GetBoardView");
     $("#partialBoard").contextmenu(function(e) { e.preventDefault(); })
-    $(".buttons .resetsGame").click(function() { resetGame(this); });
+    $(".buttons .resetsGame").click(function() { resetRound(this); });
 
     $(".resetbtn").click(function () {
         let board = JSON.parse($("#board")[0].dataset.model);
-        resetGame(this, board.Columns, board.Rows);
+        resetRound(this, board.Columns, board.Rows);
     });
 
     //sets number input width to its placeholder text
@@ -33,7 +33,7 @@ $(document).ready(function () {
 * If customColumn and -Row are undefined then the data will be retrieved from the sender.
 * Will not change life count stat if its undefined.
 */
-function resetGame(sender, customColumn, customRow, customLifesCount) {
+function resetRound(sender, customColumn, customRow, customLifesCount) {
     $.get("/Game/IsRoundActive", function (hasRoundStarted, status) {
         console.log(`IsRoundActive from server was ${status}`);
         if (status !== "success") {
@@ -50,11 +50,11 @@ function resetGame(sender, customColumn, customRow, customLifesCount) {
         var row = customRow === undefined ? $(sender).data("row") : customRow;
 
         if (!customLifesCount) {
-            getPartialBoard("ResetGame", column, row);
+            getPartialBoard("ResetRound", column, row);
             return;
         }
 
-        getPartialBoard("ResetGameAndChangeLifes", column, row, customLifesCount);
+        getPartialBoard("ResetRoundAndSetLifes", column, row, customLifesCount);
         console.log("Game has been reset");
     });
 }
@@ -130,7 +130,7 @@ function ToggleClassOnHover(cellModel, boardView, isHovering) {
 }
 
 /**
- * Accepts the custom size if its valid and calls resetGame with new attributes.
+ * Accepts the custom size if its valid and calls resetRound with new attributes.
  */
 function confirmCustomSize() {
     let customRow = $("#customRow")[0];
@@ -145,11 +145,11 @@ function confirmCustomSize() {
         return;
     }
 
-    resetGame(this, customColValue, customRowValue);
+    resetRound(this, customColValue, customRowValue);
 }
 
 /**
- * Accepts the custom life count if its valid and calls resetGame with the new attribute.
+ * Accepts the custom life count if its valid and calls resetRound with the new attribute.
  */
 function confirmLifeAmount() {
     let customLifes = $("#customLifes")[0];
@@ -160,7 +160,7 @@ function confirmLifeAmount() {
         return;
     }
 
-    resetGame(this, _boardModel.Columns, _boardModel.Rows, customLifesValue);
+    resetRound(this, _boardModel.Columns, _boardModel.Rows, customLifesValue);
 }
 
 /**
@@ -182,9 +182,28 @@ function changeTitlesOnLoss() {
             return;
         }
 
-        changeTitles("Good luck!", [lossStreakCount + 1 + (lossStreakCount + 1 == 1 ? "st " :
-                                                           lossStreakCount + 1 == 2 ? "nd " :
-                                                           lossStreakCount + 1 == 3 ? "rd " :
-                                                                                      "th ") + "try's a charm"]);
+        let subtitleText;               //show the amount of reties on subtitle
+        switch (lossStreakCount) {
+            case 0:
+                subtitleText = "st ";
+                break;
+            case 1:
+                subtitleText = "nd ";
+                break;
+            case 2:
+                subtitleText = "rd ";
+                break;
+            default:
+                subtitleText = "th ";
+        }
+        subtitleText = `${lossStreakCount + 1}${subtitleText} try's a charm`;
+
+        //1/16 (6,25%) chance to get 'easter egg' text
+        changeTitles("Good luck!", [subtitleText, subtitleText, subtitleText,
+                                    subtitleText, subtitleText, subtitleText,
+                                    subtitleText, subtitleText, subtitleText,
+                                    subtitleText, subtitleText, subtitleText,
+                                    subtitleText, subtitleText, subtitleText,
+                                    "Gotta sweep, sweep, sweep!"]);
     });
 }

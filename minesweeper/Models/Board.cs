@@ -11,15 +11,15 @@ public class Board
 	int _lifeCount;
 	int _setFlagCount;
 
-	Cell[,] _cells;
-	RoundSummary _summary;
+	Cell[,] _cells = new Cell[0, 0];
+	RoundSummary? _summary;
 
 	static int _cellsCount;
 	static bool _isRoundActive;			//todo: replace this with enum containing these active states: running, not started, won, lost, paused. Will replace methods IsRoundLost and -Won
 
 	static int _lossStreakCount;
 	static int _originalLifeCount;
-	static Random _randon = new Random();
+	static Random _random = new Random();
 
 	/// <summary>
 	/// Standard constructor, will initialize a random count between 5 to 15 for colums and rows
@@ -27,8 +27,7 @@ public class Board
 	public Board()
 	{
 		_originalLifeCount = 1;
-		adjustBoardAttrbutes(_randon.Next(5, 15), _randon.Next(5, 15));
-		InitCells();
+		AdjustBoardAttrbutes(_random.Next(5, 15), _random.Next(5, 15));
 	}
 
 	/// <summary>
@@ -36,8 +35,7 @@ public class Board
 	/// </summary>
 	public Board(int myColumns, int myRows)
 	{
-		adjustBoardAttrbutes(myColumns, myRows);
-		InitCells();
+		AdjustBoardAttrbutes(myColumns, myRows);
 	}
 
 	/// <summary>
@@ -46,8 +44,7 @@ public class Board
 	public Board(int myColumns, int myRows, int myLifes)
 	{
 		_originalLifeCount = myLifes;
-		adjustBoardAttrbutes(myColumns, myRows);
-		InitCells();
+		AdjustBoardAttrbutes(myColumns, myRows);
 	}
 
 	/// <summary>
@@ -55,7 +52,7 @@ public class Board
 	/// </summary>
 	/// <param name="myColumns"></param>
 	/// <param name="myRows"></param>
-	void adjustBoardAttrbutes(int myColumns, int myRows)
+	void AdjustBoardAttrbutes(int myColumns, int myRows)
 	{
 		_columns = myColumns;
 		_rows = myRows;
@@ -133,7 +130,7 @@ public class Board
 		//after this bombList will have the correct amount of cells randomized to be bombs
 		for (int i = 0; i < boardSize; i++)
 		{
-			int randNumber = _randon.Next(0, 4);
+			int randNumber = _random.Next(0, 4);
 
 			if (randNumber == 3 && tmpBombs > 0)
 			{
@@ -146,7 +143,7 @@ public class Board
 		//...but it may not have _bombCount amount of bombs, so put in the rest till tmpBombs is 0
 		while (tmpBombs > 0)
 		{   //select random cells to be bombs, if its not already one
-			int randCell = _randon.Next(boardSize - 1);
+			int randCell = _random.Next(boardSize - 1);
 			if (!bombList[randCell])
 			{
 				bombList[randCell] = true;
@@ -323,19 +320,6 @@ public class Board
 		}
 	}
 	
-	public List<Cell> GetBombs()
-	{
-		List<Cell> bombs = new List<Cell>();
-		foreach(Cell cell in _cells)
-		{
-			if (cell.IsBomb)
-			{
-				bombs.Add(cell);
-			}
-		}
-		return bombs;
-	}
-
 	/// <returns>True, if the round has been lost, otherwise false, meaning that its won or still running.</returns>
 	public bool IsRoundLost()
 	{
@@ -391,5 +375,5 @@ public class Board
 	public Cell[,] Cells { get => _cells; }
 	
 	[JsonIgnore]
-	public RoundSummary Summary { get => _summary; }
+	public RoundSummary Summary { get => _summary!; }
 }

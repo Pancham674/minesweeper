@@ -143,7 +143,7 @@ function OnRoundFinished(isRoundWon) {
         });
 
         if (isRoundWon) {       //congratulate player (yoy)
-            changeTitles("Board Finished!", ["Awesome!", "Congrats!!", "Amazing!!!"]);
+            changeTitles("Board Finished!", ["Congrats!", "Awesome!!", "Woahh!!!", "Amazing!!!!"]);
         } else {                //gg (gitgud)
             changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
         }
