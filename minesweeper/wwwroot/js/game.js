@@ -196,14 +196,13 @@ function changeTitlesOnLoss() {
             default:
                 subtitleText = "th ";
         }
-        subtitleText = `${lossStreakCount + 1}${subtitleText} try's a charm`;
+        subtitleText = `${lossStreakCount + 1}${subtitleText} try's a charm,`;
 
-        //1/16 (6,25%) chance to get 'easter egg' text
-        changeTitles("Good luck!", [subtitleText, subtitleText, subtitleText,
-                                    subtitleText, subtitleText, subtitleText,
-                                    subtitleText, subtitleText, subtitleText,
-                                    subtitleText, subtitleText, subtitleText,
-                                    subtitleText, subtitleText, subtitleText,
-                                    "Gotta sweep, sweep, sweep!"]);
+        subtitleText = subtitleText.repeat(99);
+        subtitleText = subtitleText.substring(0, subtitleText.length - 1);     //remove last comma
+
+        let subtitlesArray = subtitleText.split(',');
+        subtitlesArray.push("Gotta sweep, sweep, sweep!");                      //1% (1/100) chance to get this text
+        changeTitles("Good luck!", subtitlesArray);
     });
 }
