@@ -92,14 +92,14 @@ function refreshBoardStats(currentBoard) {
     console.log("boardModel has been updated to current")
 
     refreshAfterFlagToggle(_boardModel.SetFlagCount);
-    _lifesStat.textContent = `Lifes: ${_boardModel.LifeCount}`;
+    _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
 
     let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
-    _boardProgressStat.textContent = `Covered Cells: ${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+    _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
 }
 
 function refreshAfterFlagToggle(currentSetFlagCount) {
-    _remainingFlagsStat.textContent = `Remaining flags: ${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
+    _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
 
 /**
@@ -166,12 +166,32 @@ function confirmLifeAmount() {
 /**
  * Changes both title and subtitle
  */
-function changeTitles(titleText, subtitleText) {
+function changeTitles(titleText, subtitleText, lossStreakCount) {
     let title = $("#title")[0];
     let subtitle = $("#subtitle")[0];
+    let previousSubtitle = subtitle.textContent;
 
     title.textContent = titleText;
-    subtitle.textContent = subtitleText[Math.floor(Math.random() * subtitleText.length)];
+    let chosenSubtitle = subtitleText[Math.floor(Math.random() * subtitleText.length)];
+    subtitle.textContent = chosenSubtitle;
+
+    //check if the secret wasnt chosen
+    if (chosenSubtitle != subtitleText[99]) {
+        subtitle.style.textShadow = "";
+        return;
+    }
+
+    //if we get the secret, then make it rainbow!!
+    let text = subtitle.innerText;
+    subtitle.innerHTML = "";
+
+    for (let i = 0; i < text.length; i++) {
+        let charElem = document.createElement("span");
+        charElem.style.color = `hsl(${(360 * i / text.length)},80%,50%)`;
+        charElem.innerHTML = text[i];
+        subtitle.appendChild(charElem);
+    }
+    subtitle.style.textShadow = "1px 1px 0 #451b50, 1px 1px 0 #451b50";     //try to add outline to make it more visible
 }
 
 function changeTitlesOnLoss() {

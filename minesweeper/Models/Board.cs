@@ -6,7 +6,7 @@ public class Board
 {
 	int _rows;
 	int _columns;
-	int _bombsCount;
+	int _bombsCount;					//todo: create difficulty level instead of doing cellCount / 4
 	long _revealedCellsCount;
 	
 	int _lifeCount;
@@ -28,7 +28,7 @@ public class Board
 	public Board()
 	{
 		_originalLifeCount = 1;
-		AdjustBoardAttrbutes(_random.Next(5, 15), _random.Next(5, 15));
+		AdjustBoardAttributes(_random.Next(5, 15), _random.Next(5, 15));
 	}
 
 	/// <summary>
@@ -36,7 +36,7 @@ public class Board
 	/// </summary>
 	public Board(int myColumns, int myRows)
 	{
-		AdjustBoardAttrbutes(myColumns, myRows);
+		AdjustBoardAttributes(myColumns, myRows);
 	}
 
 	/// <summary>
@@ -45,15 +45,15 @@ public class Board
 	public Board(int myColumns, int myRows, int myLifes)
 	{
 		_originalLifeCount = myLifes;
-		AdjustBoardAttrbutes(myColumns, myRows);
+		AdjustBoardAttributes(myColumns, myRows);
 	}
 
 	/// <summary>
-	/// Sets the cell- and currentBombsCount depending on myColumns and myRows. Initializes an empty summary and calls InitializeCells() afterwards.
+	/// Sets the cell- and bombsCount depending on myColumns and myRows. Initializes an empty summary and calls InitializeCells() afterwards.
 	/// </summary>
 	/// <param name="myColumns"></param>
 	/// <param name="myRows"></param>
-	void AdjustBoardAttrbutes(int myColumns, int myRows)
+	void AdjustBoardAttributes(int myColumns, int myRows)
 	{
 		_columns = myColumns;
 		_rows = myRows;

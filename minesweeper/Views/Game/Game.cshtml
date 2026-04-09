@@ -21,17 +21,17 @@
     </div>
 
     <div class="customizable">
-        <h2>Change Difficulty</h2>
+        <h2 class="customizable-header"><b>Standard Difficulties</b></h2>
         <div class="buttons">
-            <button class="resetsGame" data-column="15" data-row="5">easy - 5x15</button>
-            <button class="resetsGame" data-column="20" data-row="10">normal - 10x20</button>
-            <button class="resetsGame" data-column="30" data-row="20">hard - 20x30</button>
+            <button class="resetsGame" data-column="15" data-row="5">easy - 15x5</button>
+            <button class="resetsGame" data-column="20" data-row="10">normal - 20x10</button>
+            <button class="resetsGame" data-column="30" data-row="20">hard - 30x20</button>
         </div>
-        <h2 class="custom-size-title">User defined</h2>
+        <h2 class="customizable-header"><b>Custom Settings</b></h2>
         <div class="user-defined">
-            <h3>Custom size:</h3>
+            <h3>Size:</h3>
             <input type="number" id="customColumn" min="5" max="99" placeholder="column">
-            <p>X</p>
+            <p>x</p>
             <input type="number" id="customRow" min="5" max="99" placeholder="row">
             <button onclick="confirmCustomSize()">Confirm size</button>
         </div>
