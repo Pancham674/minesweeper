@@ -1,4 +1,4 @@
-The classic minesweeper game recreated within a little html project with css and javascript.  
+A classic minesweeper game recreated with the ASP.NET MVC framework.  
 [Tutorial to minesweeper.](https://www.youtube.com/watch?v=9Qh6fUlhUrs&ab_channel=TSSSwag)
 
 ---
