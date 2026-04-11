@@ -51,9 +51,8 @@ h3 {
     margin: 5px;
 }
 
-.subtitle {
-    margin: 0 auto 10px;
-    font-size: 100%;
+#subtitle {
+    margin-bottom: 1em;
 }
 
 .user-defined h3 {
@@ -70,6 +69,7 @@ h3 {
     grid-template-rows: auto;
     margin: 0 auto;
     border: 5px solid #7a428a;
+    transform: translateY(-5px);    /*top border should intersect with board-infos border-bottom*/
 }
 
 #board.won {
@@ -131,16 +131,13 @@ button {
 
 .resetbtn {
     border: 5px solid #7a428a;
-    border-bottom: none;
+    border-left: none;
 }
 
 
 .board-info {
     display: inline-flex;
     justify-content: space-between;
-    margin: 0 0 10px;
-    transform: translateY(-5px); /*top border intersects with the boards botton border*/
-    z-index: 1;
 }
 
     .board-info > p {
@@ -159,4 +156,8 @@ button {
     width: 23em;
     border: 5px #7a428a solid;
     background: #fbefff;
+}
+
+div:has(> .board-info, > .resetbtn) {
+    display: flex;
 }
