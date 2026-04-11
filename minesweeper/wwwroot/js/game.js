@@ -16,6 +16,24 @@ $(document).ready(function () {
         resetRound(this, board.Columns, board.Rows);
     });
 
+
+    let customizable = $(".customizable")[0];
+    let customizableHeight = customizable.offsetHeight; 
+    $(customizable).hide();
+
+    $(".customizable-btn").click(function () {
+        let custombtn = this;
+
+        if (!customizable.checkVisibility()) {           //change the direction in custombtn based on if settings is shown or not
+            custombtn.innerHTML = `\<<br>\<`;
+        }
+        else {
+            custombtn.style.height = customizableHeight;
+            custombtn.innerHTML = `\><br>\>`;
+        }
+        $(customizable).toggle("slow", "swing");
+    });
+
     //sets number input width to its placeholder text
     $("input").each(function () {
         this.setAttribute("size", this.getAttribute("placeholder").length);

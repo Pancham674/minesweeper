@@ -158,6 +158,19 @@ button {
     background: #fbefff;
 }
 
+#settings-sidebar {
+    display: flex;
+    position: absolute;
+    z-index: 1;
+}
+
+.customizable-btn {
+    display: block;
+    overflow: hidden;
+    border-width: 5px;
+    border-left: none;
+}
+
 div:has(> .board-info, > .resetbtn) {
     display: flex;
 }
