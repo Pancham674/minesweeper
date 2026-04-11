@@ -13,10 +13,10 @@ public class Board
 	int _setFlagCount;
 
 	Cell[,] _cells = new Cell[0, 0];
-	RoundSummary? _summary;
+	RoundSummary _summary = new RoundSummary();
 
 	static int _cellsCount;
-	static bool _isRoundActive;			//todo: replace this with enum containing these active states: running, not started, won, lost, paused. Will replace methods IsRoundLost and -Won
+	static RoundState _currentState;
 
 	static int _lossStreakCount;
 	static int _originalLifeCount;
@@ -71,7 +71,7 @@ public class Board
 	{
 		_setFlagCount = 0;
 		_revealedCellsCount = 0;
-		_isRoundActive = false;
+		_currentState = RoundState.NotStarted;
 		_lifeCount = _originalLifeCount;
 	}
 
@@ -143,7 +143,7 @@ public class Board
 
 	public List<Cell> CellClicked(int myColumn, int myRow)
 	{
-		_isRoundActive = true;
+		_currentState = RoundState.Active;
 		List<Cell> affectedCells = new List<Cell>();
 		CellClicked(_cells[myColumn, myRow], ref affectedCells);
 		return affectedCells;
@@ -155,7 +155,10 @@ public class Board
 	/// <param name="myAffectedCells">If a cell gets revealed then itll be added to this list to be shown in the View later.</param>
 	void CellClicked(Cell myCell, ref List<Cell> myAffectedCells)
 	{
-		if (myCell.IsFlagged) { return; }
+		if (_currentState == RoundState.Lost || myCell.IsFlagged)
+		{
+			return;
+		}
 		else if (myCell.IsBomb)
 		{
 			_lifeCount--;
@@ -165,8 +168,9 @@ public class Board
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (IsRoundLost())
+			if (_lifeCount <= 0)
 			{
+				_currentState = RoundState.Lost;
 				_lossStreakCount++;
 				RevealBombs();
 				return;
@@ -306,25 +310,20 @@ public class Board
 			cell.IsRevealed = cell.IsRevealed ? cell.IsRevealed : cell.IsBomb;
 		}
 	}
-	
-	/// <returns>True, if the round has been lost, otherwise false, meaning that its won or still running.</returns>
-	public bool IsRoundLost()
+
+	/// <summary>
+	/// Iterates though the entire board to verify that every non bomb has been revealed.
+	/// Will also set the current state to be won or still active.
+	/// </summary>
+	/// <returns>True, if the round has been won, otherwise false, meaning that its in a different state.</returns>
+	bool IsRoundWon()
 	{
-		if (LifeCount <= 0)
-		{
-			_isRoundActive = false;
-			return true;
-		}
+		if (_currentState == RoundState.Lost || _currentState == RoundState.NotStarted) { return false; }
 
-		return false;
-	}
-
-	/// <returns>True, if the round has been won, otherwise false, meaning that its lost or still running.</returns>
-	public bool IsRoundWon()
-	{	//assume player won
+		//assume player won...
 		bool isWon = true;
 		foreach (Cell cell in _cells)
-		{	//until theres a cell that isnt a bomb and isnt revealed (all non bombs must be revealed to win)
+		{   //until theres a cell that isnt a bomb and isnt revealed (all non bombs must be revealed to win)
 			if (!cell.IsBomb && !cell.IsRevealed)
 			{
 				isWon = false;
@@ -332,7 +331,7 @@ public class Board
 			}
 		}
 
-		_isRoundActive = !isWon;
+		_currentState = isWon ? RoundState.Won : RoundState.Active;
 		return isWon;
 	}
 
@@ -346,7 +345,11 @@ public class Board
 	/// Shows us how many non bombs there are
 	/// </summary>
 	public long RevealedCellsCount { get => _revealedCellsCount; }
-	public bool IsRoundActive { get => _isRoundActive; }
+
+	/// <summary>
+	/// Current state can either be NotStarted, Active, Lost or Won.
+	/// </summary>
+	public RoundState CurrentState { get => _currentState; }
 	public int BombsCount
 {
 		get => _bombsCount;
@@ -363,4 +366,12 @@ public class Board
 	
 	[JsonIgnore]
 	public RoundSummary Summary { get => _summary!; }
+
+	public enum RoundState
+	{
+		NotStarted,
+		Active,
+		Lost,
+		Won
+	}
 }
