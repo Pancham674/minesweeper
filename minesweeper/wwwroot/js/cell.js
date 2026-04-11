@@ -1,4 +1,9 @@
-﻿/**
+﻿const STATE_NOT_STARTED = "NotStarted";
+const STATE_ACTIVE = "Active";
+const STATE_LOST = "Lost";
+const STATE_WON = "Won";
+
+/**
  * Adds events to all .partialCell divs instead of the cellView/button itself, because partialCell reloads its content (the cellView)
  * so those events dont have to be reattached again. Except if the whole board gets reloaded (restart)
  */
@@ -44,32 +49,18 @@ function refreshCellEvents() {
                     }
 
                     //check if round is lost and call OnRoundFinished
-                    $.get("/Game/GetIsRoundLost", function (isRoundLost, status) {
+                    $.get("/Game/GetCurrentState", function (currentState, status) {
                         if (status !== "success") {
-                            console.warn("GetIsRoundLost from server resulted in an error:", isRoundLost);
+                            console.warn("GetCurrentState from server resulted in an error:", currentState);
                             return;
                         }
 
-                        if (isRoundLost) {
-                            _boardIsRoundFinished = true;
-                            OnRoundFinished(!isRoundLost);
-                            return;
+                        if (currentState == STATE_LOST) {
+                            OnRoundFinished(false);
                         }
-
-                        //check if its won instead and call OnRoundFinished too, otherwise round is still active
-                        $.get("/Game/GetIsRoundWon", function (isRoundWon, status) {
-                            if (status !== "success") {
-                                console.warn("GetIsRoundWon from server resulted in an error:", response);
-                                return;
-                            }
-
-                            if (isRoundWon) {
-                                _boardIsRoundFinished = true;
-                                OnRoundFinished(isRoundWon);
-                                return;
-                            }
-                            _boardIsRoundFinished = false;
-                        });
+                        else if (currentState == STATE_WON) {
+                            OnRoundFinished(true);
+                        }
                     });
 
                     //get the current boardModel to update all stat elements

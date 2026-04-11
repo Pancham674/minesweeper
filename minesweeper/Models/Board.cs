@@ -13,10 +13,11 @@ public class Board
 	int _setFlagCount;
 
 	Cell[,] _cells = new Cell[0, 0];
-	RoundSummary? _summary;
+	RoundSummary _summary = new RoundSummary();
 
 	static int _cellsCount;
-	static RoundState _currentState;			
+	static RoundState _currentState;
+
 	static int _lossStreakCount;
 	static int _originalLifeCount;
 	static Random _random = new Random();
@@ -154,7 +155,10 @@ public class Board
 	/// <param name="myAffectedCells">If a cell gets revealed then itll be added to this list to be shown in the View later.</param>
 	void CellClicked(Cell myCell, ref List<Cell> myAffectedCells)
 	{
-		if (myCell.IsFlagged) { return; }
+		if (_currentState == RoundState.Lost || myCell.IsFlagged)
+		{
+			return;
+		}
 		else if (myCell.IsBomb)
 		{
 			_lifeCount--;
@@ -306,25 +310,20 @@ public class Board
 			cell.IsRevealed = cell.IsRevealed ? cell.IsRevealed : cell.IsBomb;
 		}
 	}
-	
-	/// <returns>True, if the round has been lost, otherwise false, meaning that its won or still running.</returns>
-	//public bool IsRoundLost()
-	//{
-	//	if (LifeCount <= 0)
-	//	{
-	//		_currentState = false;
-	//		return true;
-	//	}
 
-	//	return false;
-	//}
+	/// <summary>
+	/// Iterates though the entire board to verify that every non bomb has been revealed.
+	/// Will also set the current state to be won or still active.
+	/// </summary>
+	/// <returns>True, if the round has been won, otherwise false, meaning that its in a different state.</returns>
+	bool IsRoundWon()
+	{
+		if (_currentState == RoundState.Lost || _currentState == RoundState.NotStarted) { return false; }
 
-	/// <returns>Sets the current state to be won or still active. True, if the round has been won, otherwise false, meaning that its lost or still running.</returns>
-	public bool IsRoundWon()
-	{	//assume player won...
+		//assume player won...
 		bool isWon = true;
 		foreach (Cell cell in _cells)
-		{	//until theres a cell that isnt a bomb and isnt revealed (all non bombs must be revealed to win)
+		{   //until theres a cell that isnt a bomb and isnt revealed (all non bombs must be revealed to win)
 			if (!cell.IsBomb && !cell.IsRevealed)
 			{
 				isWon = false;

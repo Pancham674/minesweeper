@@ -1,9 +1,7 @@
-﻿let _boardModel;
-let _boardIsRoundFinished = false;
-
-let _remainingFlagsStat;
+﻿let _lifesStat;
+let _boardModel;
 let _boardProgressStat;
-let _lifesStat;
+let _remainingFlagsStat;
 
 
 $(document).ready(function () {
@@ -34,14 +32,14 @@ $(document).ready(function () {
 * Will not change life count stat if its undefined.
 */
 function resetRound(sender, customColumn, customRow, customLifesCount) {
-    $.get("/Game/IsRoundActive", function (hasRoundStarted, status) {
-        console.log(`IsRoundActive from server was ${status}`);
+    $.get("/Game/GetCurrentState", function (currentState, status) {
+        console.log(`GetCurrentState from server was ${status}`);
         if (status !== "success") {
-            console.warn(hasRoundStarted);
+            console.warn(currentState);
             return;
         }
 
-        if ((hasRoundStarted && !_boardIsRoundFinished) && !confirm("Applying new settings will also reset the current round." +
+        if ((currentState == STATE_ACTIVE) && !confirm("Applying new settings will also reset the current round." +
             "\nAre you sure you want to continue?")) {
             return;
         }
