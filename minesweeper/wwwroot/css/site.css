@@ -30,9 +30,12 @@ body {
     text-align: start;
 }
 
-/*.nav-link:nth-last-child(-n+1) {
+.nav-item:last-child {
+    border-left: dashed 1px #7a428a;
+}
+
+.navbar-brand {
+    padding-right: 8px;
+    margin: 0;
     border-right: solid 1px #7a428a;
-}*/
-/*.nav-link {
-    border-right: solid 1px #7a428a;
-}*/
+}
