@@ -48,13 +48,11 @@ public class Cell
 	}
 
 	/// <summary>
-	/// Is this cells number of bombs that are around it. Will be -1 if the cell itself is a bomb
+	/// This is the number of bombs that are around it. Will be -1 if the cell itself is a bomb.
 	/// </summary>
 	public int NeighboringBombs
 	{
 		get => _neighboringBombs;
-		
-		//only cells that aren't bombs should have a number
 		set => _neighboringBombs = _isBomb ? -1 : value;
 	}
 }

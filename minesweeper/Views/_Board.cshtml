@@ -1,18 +1,15 @@
 ﻿@model Board
-<button class="resetsGame resetbtn" data-column="@Model.Columns" data-row="@Model.Rows">Reset</button>
-
-<div id="board" data-board='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
-    <table>
-        @for (int row = 0; row < Model.Rows; row++)
-        {
-            <tr>
-                @for (int col = 0; col < Model.Columns; col++)
-                {
-                    <td>
-                        <button class="cell" data-column="@col" data-row="@row"></button>
-                    </td>
-                }
-            </tr>
-        }
-    </table>
+<div id="board" data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
+    
+    @for (int r = 0; r < Model.Rows; r++)
+    {
+        <div class="board-row">
+            @for (int c = 0; c < Model.Columns; c++)
+            {
+                <div class="partialCell">
+                    <partial name="_Cell.cshtml" model="Model.Cells[c,r]" />
+                </div>
+            }
+        </div>
+    }
 </div>
