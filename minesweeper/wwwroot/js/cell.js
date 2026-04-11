@@ -55,11 +55,8 @@ function refreshCellEvents() {
                             return;
                         }
 
-                        if (currentState == STATE_LOST) {
-                            OnRoundFinished(false);
-                        }
-                        else if (currentState == STATE_WON) {
-                            OnRoundFinished(true);
+                        if (currentState != STATE_ACTIVE && currentState != STATE_NOT_STARTED) {
+                            OnRoundFinished(currentState == STATE_WON);
                         }
                     });
 

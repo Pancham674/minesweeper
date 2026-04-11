@@ -168,7 +168,7 @@ public class Board
 			myCell.IsFlagged = true;
 			myCell.IsExploded = true;
 
-			if (LifeCount <= 0)
+			if (_lifeCount <= 0)
 			{
 				_currentState = RoundState.Lost;
 				_lossStreakCount++;
