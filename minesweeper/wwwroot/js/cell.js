@@ -48,7 +48,7 @@ function refreshCellEvents() {
                         });
                     }
 
-                    //check if round is lost and call OnRoundFinished
+                    //get the current state and call OnRoundFinished if its lost or won
                     $.get("/Game/GetCurrentState", function (currentState, status) {
                         if (status !== "success") {
                             console.warn("GetCurrentState from server resulted in an error:", currentState);
