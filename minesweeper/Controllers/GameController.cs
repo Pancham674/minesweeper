@@ -102,19 +102,23 @@ namespace minesweeper.Controllers
 			return _board!.LossStreakCount;
 		}
 
-		public bool GetIsRoundLost()
+		/// <summary>
+		/// Can either
+		/// </summary>
+		/// <returns>The current state of the board as a string</returns>
+		public string GetCurrentState()
 		{
-			return _board!.IsRoundLost();
+			return _board!.CurrentState.ToString();
 		}
 
-		public bool GetIsRoundWon()
-		{
-			return _board!.IsRoundWon();
-		}
+		//public bool GetIsRoundWon()
+		//{
+		//	return _board!.IsRoundWon();
+		//}
 
-		public bool IsRoundActive()
-		{
-			return _board!.IsRoundActive;
-		}
+		//public bool IsRoundActive()
+		//{
+		//	return _board!.CurrentState;
+		//}
 	}
 }
