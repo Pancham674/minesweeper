@@ -1,0 +1,15 @@
+﻿@model Board
+<div id="board" data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
+    
+    @for (int r = 0; r < Model.Rows; r++)
+    {
+        <div class="board-row">
+            @for (int c = 0; c < Model.Columns; c++)
+            {
+                <div class="partialCell">
+                    <partial name="_Cell.cshtml" model="Model.Cells[c,r]" />
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,17 @@
+﻿@* 
+    todo:
+    - Show a table of the game history (but show important stuff like won or lost and time)
+        - add a btn to each that directs to game history view for detail view
+        - add btn to delete each history item
+        - add btn to delete all
+*@
+
+@{
+    ViewData["Title"] = "Minesweeper";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome, fellow Sweeper!</h1>
+    <p>Click <a asp-controller="Game" asp-action="Start">here</a> to be directed to the Game page!</p>
+    <p>Or click <a asp-controller="Settings" asp-action="Settings">here</a> to go to the Settings page!</p>
+</div>

@@ -1,0 +1,50 @@
+﻿@*
+    todo:
+    - add sql database to save the game history and stats when the game's completed
+*@
+@{
+    ViewData["Title"] = "Game";
+}
+
+@model Board
+
+<div class="main-content">
+    <h1 id="title">Good luck!</h1>
+    <h2 id="subtitle">1st try's a charm</h2>
+    
+    <button class="resetsGame resetbtn">Reset</button>
+    <div id="partialBoard"></div>
+    <div class="board-info">
+        <p id="remainingFlags"></p>
+        <p id="boardProgress"></p>
+        <p id="lifes"></p>
+    </div>
+
+    <div class="customizable">
+        <h2 class="customizable-header"><b>Standard Difficulties</b></h2>
+        <div class="buttons">
+            <button class="resetsGame" data-column="15" data-row="5">easy - 15x5</button>
+            <button class="resetsGame" data-column="20" data-row="10">normal - 20x10</button>
+            <button class="resetsGame" data-column="30" data-row="20">hard - 30x20</button>
+        </div>
+        <h2 class="customizable-header"><b>Custom Settings</b></h2>
+        <div class="user-defined">
+            <h3>Size:</h3>
+            <input type="number" id="customColumn" min="5" max="99" placeholder="column">
+            <p>x</p>
+            <input type="number" id="customRow" min="5" max="99" placeholder="row">
+            <button onclick="confirmCustomSize()">Confirm size</button>
+        </div>
+        <div class="user-defined">
+            <h3>Lifes:</h3>
+            <input type="number" id="customLifes" min="1" max="99" placeholder="amount">
+            <button onclick="confirmLifeAmount()">Confirm lifes</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="/js/cell.js"></script>
+    <script src="/js/game.js"></script>
+}
+<link rel="stylesheet" href="/css/style.css" />

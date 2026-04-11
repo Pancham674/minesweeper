@@ -1,0 +1,162 @@
+.board-row{
+    display: flex;
+}
+
+.empty.cell {
+    background: #b182be;
+}
+
+.empty.cell.won-game {
+    background: #82be8a;
+}
+
+.empty.cell:hover,
+.bomb.cell:hover, 
+.finished:hover {
+    filter: none;
+    cursor: default;
+}
+
+.main-content,
+#partialBoard {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background: #eacaff;
+    color: #451b50;
+}
+
+.customizable-header:not(:first-child) {
+    border-top: 1px solid #451b50;
+}
+
+.customizable-header {
+    background: #eacaff;
+    padding: 0.5em 0.5em;
+    margin: 0 0 0.5em;
+}
+
+h1 {
+    font-size: 200%;
+    margin: 0.2em 0 0 0;
+}
+
+h2 {
+    font-size: 130%;
+    margin-bottom: 0.5em;
+}
+
+h3 {
+    margin: 5px;
+}
+
+.subtitle {
+    margin: 0 auto 10px;
+    font-size: 100%;
+}
+
+.user-defined h3 {
+    font-size: 100%;
+}
+
+.user-defined:first-child {
+    border-top: none;
+}
+
+#board {
+    display: grid;
+    justify-content: center;
+    grid-template-rows: auto;
+    margin: 0 auto;
+    border: 5px solid #7a428a;
+}
+
+#board.won {
+    background: #f2ffef;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5em;
+}
+
+.user-defined {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+    .user-defined:last-child {
+        margin-top: 0.5em;
+        border-top: 1px #7a428a dashed
+    }
+
+    .user-defined > p,
+    .user-defined > button,
+    .user-defined > input {
+        margin: 10px 0px 5px;
+    }
+
+
+button {
+    border: 1px #7a428a solid;
+    background: #e6a9f7;
+    color: #7a428a;
+    font-size: 100%;
+    padding: 5px;
+}
+
+    button:hover {
+        filter: brightness(60%);
+        cursor: pointer;
+    }
+
+.cell {
+    width: 25px;
+    height: 25px;
+    font-size: 70%;
+    font-weight: bold;
+}
+
+.hovering {
+    filter: brightness(85%);
+}
+
+.won-game {
+    background: #a9f7a9;
+}
+
+
+.resetbtn {
+    border: 5px solid #7a428a;
+    border-bottom: none;
+}
+
+
+.board-info {
+    display: inline-flex;
+    justify-content: space-between;
+    margin: 0 0 10px;
+    transform: translateY(-5px); /*top border intersects with the boards botton border*/
+    z-index: 1;
+}
+
+    .board-info > p {
+        margin: 0;
+        padding: 0 10px;
+        display: inline-block;
+    }
+
+
+        .board-info > p:not(:nth-child(2)) {
+            background: #eacaff;
+        }
+
+.customizable, .board-info {
+    padding: 0.5em;
+    width: 23em;
+    border: 5px #7a428a solid;
+    background: #fbefff;
+}
