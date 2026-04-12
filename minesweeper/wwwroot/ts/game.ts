@@ -57,7 +57,7 @@ $(() => {
 function resetRound(sender: HTMLElement, customColumn: number, customRow: number, customLifesCount: number):void {
     $.get("/Game/GetCurrentState", function (currentState, status) {
         console.log(`GetCurrentState from server was ${status}`);
-        if (status !== "success") {
+        if (status != "success") {
             console.warn(currentState);
             return;
         }
@@ -87,7 +87,7 @@ function resetGameWithNewSizeAndLifes(column, row, customLifesCount): void {
     $("#partialBoard").load("/Game/ResetRoundAndSetLifes", { myColumn: column, myRow: row, myLifes: customLifesCount }, function (_, stat, xhr) {
         console.log(`"ResetRoundAndSetLifes from server was ${stat}`);
 
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
@@ -100,7 +100,7 @@ function resetWithNewSize(column: number, row: number): void {
     $("#partialBoard").load("/Game/ResetRound", { myColumn: column, myRow: row }, function (_, stat, xhr) {
         console.log(`ResetRound from server was ${stat}`);
 
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
@@ -113,12 +113,12 @@ function getBoardView(): void {
     $("#partialBoard").load("/Game/GetBoardView", function (_, stat, xhr) {
         console.log(`GetBoardView from server was ${stat}`);
 
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
+        refreshUIBoardElements();
     });
-    refreshUIBoardElements();
 }
 
 function refreshUIBoardElements(): void {

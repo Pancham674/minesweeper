@@ -14,7 +14,7 @@ function refreshCellEvents() {
                 }
                 $.getJSON("/Game/CellClicked", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (revealedCellsArray, status, xhr) {
                     console.log("cell in c", cellModel.Column, " r", cellModel.Row, `clicked, was ${status}`);
-                    if (status !== "success") {
+                    if (status != "success") {
                         console.warn("xhr:", xhr);
                         return;
                     }
@@ -27,7 +27,7 @@ function refreshCellEvents() {
                             console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
                             let affectedPartialCell = boardView.children[cell.Row].children[cell.Column];
                             $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
-                                if (status !== "success") {
+                                if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
@@ -38,7 +38,7 @@ function refreshCellEvents() {
                         });
                     }
                     $.get("/Game/GetCurrentState", function (currentState, status) {
-                        if (status !== "success") {
+                        if (status != "success") {
                             console.warn("GetCurrentState from server resulted in an error:", currentState);
                             return;
                         }
@@ -47,7 +47,7 @@ function refreshCellEvents() {
                         }
                     });
                     $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
-                        if (status !== "success") {
+                        if (status != "success") {
                             console.warn("GetBoardModel from server resulted in an error:", boardModel);
                             return;
                         }
@@ -90,7 +90,7 @@ function refreshCellEvents() {
 function OnRoundFinished(isRoundWon) {
     $("#partialBoard").load("/Game/GetBoardView", function (_, status, xhr) {
         console.log(`OnRoundFinished: GetBoardView from server was ${status}`);
-        if (status !== "success") {
+        if (status != "success") {
             console.warn(xhr);
             return;
         }

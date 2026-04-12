@@ -9,8 +9,8 @@ const STATE_WON = "Won";
  */
 function refreshCellEvents() {
     $('.partialCell').each(function () {
-        let partialCell = this;
-        let cellModel = JSON.parse((partialCell.firstElementChild as HTMLElement).dataset.model);
+        let partialCell = this as HTMLDivElement;
+        let cellModel = JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model);
 
         $(partialCell).on({         //attach click, contextmenu, mouseenter and -leave eventhandlers
             click: function () {
@@ -22,7 +22,7 @@ function refreshCellEvents() {
                 //click the specific cell and get JSON data of all cells that got revealed by that click
                 $.getJSON("/Game/CellClicked", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (revealedCellsArray, status, xhr) {
                     console.log("cell in c", cellModel.Column, " r", cellModel.Row, `clicked, was ${status}`);
-                    if (status !== "success") {
+                    if (status != "success") {
                         console.warn("xhr:", xhr);
                         return;
                     }
@@ -30,14 +30,14 @@ function refreshCellEvents() {
                     //if round was lost, by clicking a bomb, then this would be false
                     if (revealedCellsArray.length == 0) { console.log("the click didnt do anything."); }
                     else {
-                        let boardView = $("#board")[0];
+                        let boardView = $("#board")[0] as HTMLDivElement;
                         revealedCellsArray.forEach(function (cell) {
                             console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
-                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column]
+                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column] as HTMLDivElement;
 
                             //refresh every cell, that has been affected, by reloading its partialCell
                             $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
-                                if (status !== "success") {
+                                if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
@@ -50,7 +50,7 @@ function refreshCellEvents() {
 
                     //get the current state and call OnRoundFinished if its lost or won
                     $.get("/Game/GetCurrentState", function (currentState, status) {
-                        if (status !== "success") {
+                        if (status != "success") {
                             console.warn("GetCurrentState from server resulted in an error:", currentState);
                             return;
                         }
@@ -62,7 +62,7 @@ function refreshCellEvents() {
 
                     //get the current boardModel to update all stat elements
                     $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
-                        if (status !== "success") {
+                        if (status != "success") {
                             console.warn("GetBoardModel from server resulted in an error:", boardModel);
                             return;
                         }
@@ -104,8 +104,8 @@ function refreshCellEvents() {
                 });
             },
 
-            mouseenter: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLElement).dataset.model), partialCell.parentElement.parentElement, true); },
-            mouseleave: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLElement).dataset.model), partialCell.parentElement.parentElement, false); }
+            mouseenter: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, true); },
+            mouseleave: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, false); }
         });
     });
 }
@@ -116,12 +116,12 @@ function refreshCellEvents() {
 function OnRoundFinished(isRoundWon: boolean) {
     $("#partialBoard").load("/Game/GetBoardView", function (_, status, xhr) {
         console.log(`OnRoundFinished: GetBoardView from server was ${status}`);
-        if (status !== "success") {
+        if (status != "success") {
             console.warn(xhr);
             return;
         }
 
-        $(".partialCell > button").each(function (i, cellView) {
+        $(".partialCell > button").each(function (i, cellView: HTMLButtonElement) {
             let cellModel = JSON.parse(cellView.dataset.model);
 
             if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {

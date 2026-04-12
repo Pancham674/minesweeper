@@ -34,12 +34,11 @@ $(() => {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     }
     ;
-    refreshUIBoardElements();
 });
 function resetRound(sender, customColumn, customRow, customLifesCount) {
     $.get("/Game/GetCurrentState", function (currentState, status) {
         console.log(`GetCurrentState from server was ${status}`);
-        if (status !== "success") {
+        if (status != "success") {
             console.warn(currentState);
             return;
         }
@@ -60,7 +59,7 @@ function resetRound(sender, customColumn, customRow, customLifesCount) {
 function resetGameWithNewSizeAndLifes(column, row, customLifesCount) {
     $("#partialBoard").load("/Game/ResetRoundAndSetLifes", { myColumn: column, myRow: row, myLifes: customLifesCount }, function (_, stat, xhr) {
         console.log(`"ResetRoundAndSetLifes from server was ${stat}`);
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
@@ -70,7 +69,7 @@ function resetGameWithNewSizeAndLifes(column, row, customLifesCount) {
 function resetWithNewSize(column, row) {
     $("#partialBoard").load("/Game/ResetRound", { myColumn: column, myRow: row }, function (_, stat, xhr) {
         console.log(`ResetRound from server was ${stat}`);
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
@@ -80,12 +79,12 @@ function resetWithNewSize(column, row) {
 function getBoardView() {
     $("#partialBoard").load("/Game/GetBoardView", function (_, stat, xhr) {
         console.log(`GetBoardView from server was ${stat}`);
-        if (stat !== "success") {
+        if (stat != "success") {
             console.warn("xhr:", xhr);
             return;
         }
+        refreshUIBoardElements();
     });
-    refreshUIBoardElements();
 }
 function refreshUIBoardElements() {
     refreshCellEvents();
