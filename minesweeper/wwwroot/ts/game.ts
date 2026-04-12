@@ -4,12 +4,12 @@ let _boardProgressStat;
 let _remainingFlagsStat;
 
 
-$(document).ready(function () {
+$(() => {
     console.log("document is ready");
 
     getPartialBoard("GetBoardView");
-    $("#partialBoard").contextmenu(function(e) { e.preventDefault(); })
-    $(".buttons .resetsGame").click(function() { resetRound(this); });
+    document.getElementById("partialBoard").oncontextmenu = function(e) { e.preventDefault(); };
+    document.getElementsByClassName(".buttons.resetsGame").onclick = function () { resetRound(this) };
 
     $(".resetbtn").click(function () {
         let board = JSON.parse($("#board")[0].dataset.model);
