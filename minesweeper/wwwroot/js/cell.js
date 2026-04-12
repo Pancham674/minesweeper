@@ -1,8 +1,6 @@
-const STATE_NOT_STARTED = "NotStarted";
-const STATE_ACTIVE = "Active";
-const STATE_LOST = "Lost";
-const STATE_WON = "Won";
-function refreshCellEvents() {
+import * as Model from "./Model.js";
+import { toggleClassOnHover, refreshBoardStats, changeTitles, refreshAfterFlagToggle } from "./game.js";
+export function refreshCellEvents() {
     $('.partialCell').each(function () {
         let partialCell = this;
         let cellModel = JSON.parse(partialCell.firstElementChild.dataset.model);
@@ -42,8 +40,8 @@ function refreshCellEvents() {
                             console.warn("GetCurrentState from server resulted in an error:", currentState);
                             return;
                         }
-                        if (currentState != STATE_ACTIVE && currentState != STATE_NOT_STARTED) {
-                            OnRoundFinished(currentState == STATE_WON);
+                        if (currentState != Model.RoundState.Active && currentState != Model.RoundState.NotStarted) {
+                            OnRoundFinished(currentState == Model.RoundState.Won);
                         }
                     });
                     $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
@@ -82,8 +80,8 @@ function refreshCellEvents() {
                     });
                 });
             },
-            mouseenter: function () { ToggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, true); },
-            mouseleave: function () { ToggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, false); }
+            mouseenter: function () { toggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, true); },
+            mouseleave: function () { toggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, false); }
         });
     });
 }

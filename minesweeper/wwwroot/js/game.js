@@ -1,3 +1,5 @@
+import * as Model from "./Model.js";
+import { refreshCellEvents } from "./cell.js";
 let _boardModel;
 let _lifesStat;
 let _boardProgressStat;
@@ -42,7 +44,7 @@ function resetRound(sender, customColumn, customRow, customLifesCount) {
             console.warn(currentState);
             return;
         }
-        if ((currentState == STATE_ACTIVE) && !confirm("Applying new settings will also reset the current round." +
+        if ((currentState == Model.RoundState.Active) && !confirm("Applying new settings will also reset the current round." +
             "\nAre you sure you want to continue?")) {
             return;
         }
@@ -91,7 +93,7 @@ function refreshUIBoardElements() {
     refreshBoardStats($("#board")[0]);
     changeTitlesOnLoss();
 }
-function refreshBoardStats(currentBoard) {
+export function refreshBoardStats(currentBoard) {
     if (currentBoard.id) {
         _boardModel = JSON.parse(currentBoard.dataset.model);
     }
@@ -104,10 +106,10 @@ function refreshBoardStats(currentBoard) {
     let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
     _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
 }
-function refreshAfterFlagToggle(currentSetFlagCount) {
+export function refreshAfterFlagToggle(currentSetFlagCount) {
     _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
-function ToggleClassOnHover(cellModel, boardView, isHovering) {
+export function toggleClassOnHover(cellModel, boardView, isHovering) {
     if (!cellModel.IsRevealed || cellModel.IsExploded) {
         return;
     }
@@ -154,7 +156,7 @@ function confirmLifeAmount() {
     }
     resetRound(this, _boardModel.Columns, _boardModel.Rows, customLifesValue);
 }
-function changeTitles(titleText, subtitleText) {
+export function changeTitles(titleText, subtitleText) {
     let title = $("#title")[0];
     let subtitle = $("#subtitle")[0];
     title.textContent = titleText;

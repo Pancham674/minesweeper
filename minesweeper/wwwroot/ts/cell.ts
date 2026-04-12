@@ -1,13 +1,11 @@
-﻿const STATE_NOT_STARTED = "NotStarted";
-const STATE_ACTIVE = "Active";
-const STATE_LOST = "Lost";
-const STATE_WON = "Won";
+﻿import * as Model from "./Model.js"
+import { toggleClassOnHover, refreshBoardStats, changeTitles, refreshAfterFlagToggle } from "./game.js"
 
 /**
- * Adds events to all .partialCell divs instead of the cellView/button itself, because partialCell reloads its content (the cellView)
- * so those events dont have to be reattached again. Except if the whole board gets reloaded (restart)
- */
-function refreshCellEvents() {
+* Adds events to all .partialCell divs instead of the cellView/button itself, because partialCell reloads its content (the cellView)
+* so those events dont have to be reattached again. Except if the whole board gets reloaded (restart)
+*/
+export function refreshCellEvents() {
     $('.partialCell').each(function () {
         let partialCell = this as HTMLDivElement;
         let cellModel = JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model);
@@ -55,8 +53,8 @@ function refreshCellEvents() {
                             return;
                         }
 
-                        if (currentState != STATE_ACTIVE && currentState != STATE_NOT_STARTED) {
-                            OnRoundFinished(currentState == STATE_WON);
+                        if (currentState != Model.RoundState.Active && currentState != Model.RoundState.NotStarted) {
+                            OnRoundFinished(currentState == Model.RoundState.Won);
                         }
                     });
 
@@ -99,13 +97,13 @@ function refreshCellEvents() {
                                 return;
                             }
                             refreshAfterFlagToggle(setFlagCount);
-                         });
+                        });
                     });
                 });
             },
 
-            mouseenter: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, true); },
-            mouseleave: function () { ToggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, false); }
+            mouseenter: function () { toggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, true); },
+            mouseleave: function () { toggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, false); }
         });
     });
 }
@@ -126,7 +124,7 @@ function OnRoundFinished(isRoundWon: boolean) {
 
             if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
                 cellView.className = "empty cell";
-            } 
+            }
             $(cellView).addClass(isRoundWon ? "won-game finished" : "finished");
         });
 

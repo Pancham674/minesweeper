@@ -103,9 +103,9 @@ namespace minesweeper.Controllers
 		}
 
 		/// <returns>The current state of the board as a string</returns>
-		public string GetCurrentState()
+		public Board.RoundState GetCurrentState()
 		{
-			return _board!.CurrentState.ToString();
+			return _board!.CurrentState;
 		}
 	}
 }

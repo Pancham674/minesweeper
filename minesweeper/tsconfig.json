@@ -6,7 +6,8 @@
     "sourceMap": true,
     "outDir": "./wwwroot/js",
     //"allowJs": true,
-    "target": "es2020"
+    "target": "es6",
+    "module": "es2015"
   },
   "exclude": [
     "node_modules",

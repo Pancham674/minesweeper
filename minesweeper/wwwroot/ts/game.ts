@@ -1,5 +1,5 @@
-﻿//import $ from "jquery";
-//import * as  from "../../Models";
+﻿import  * as Model from "./Model.js"
+import { refreshCellEvents } from "./cell.js"
 
 let _boardModel;
 let _lifesStat: HTMLParagraphElement;
@@ -62,7 +62,7 @@ function resetRound(sender: HTMLElement, customColumn: number, customRow: number
             return;
         }
 
-        if ((currentState == STATE_ACTIVE) && !confirm("Applying new settings will also reset the current round." +
+        if ((currentState == Model.RoundState.Active) && !confirm("Applying new settings will also reset the current round." +
             "\nAre you sure you want to continue?")) {
             return;
         }
@@ -130,7 +130,7 @@ function refreshUIBoardElements(): void {
 /**
  * Refreshes the current statistics shown to the player.
  */
-function refreshBoardStats(currentBoard: HTMLDivElement) {
+export function refreshBoardStats(currentBoard: HTMLDivElement) {
     if (currentBoard.id) {
         _boardModel = JSON.parse(currentBoard.dataset.model);
     } else { _boardModel = currentBoard; }
@@ -144,7 +144,7 @@ function refreshBoardStats(currentBoard: HTMLDivElement) {
     _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
 }
 
-function refreshAfterFlagToggle(currentSetFlagCount: number)  {
+export function refreshAfterFlagToggle(currentSetFlagCount: number)  {
     _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
 
@@ -152,7 +152,7 @@ function refreshAfterFlagToggle(currentSetFlagCount: number)  {
  * Highlights the unrevealed neighbors of a revealed cell by adding or removing a classname based on if its currently hovered on or not.
  * Intended to help the player see the neighbors more clearly for chording.
  */
-function ToggleClassOnHover(cellModel, boardView: HTMLElement, isHovering: boolean) {
+export function toggleClassOnHover(cellModel, boardView: HTMLElement, isHovering: boolean) {
     //only neighbors of revealed cells should be marked
     if (!cellModel.IsRevealed || cellModel.IsExploded) { return; }
 
@@ -212,7 +212,7 @@ function confirmLifeAmount() {
 /**
  * Changes both title and subtitle
  */
-function changeTitles(titleText: string, subtitleText: string[]) {
+export function changeTitles(titleText: string, subtitleText: string[]) {
     let title: HTMLHeadingElement = $("#title")[0] as HTMLHeadingElement;
     let subtitle: HTMLHeadingElement = $("#subtitle")[0] as HTMLHeadingElement;
 
