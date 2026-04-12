@@ -162,6 +162,7 @@ button {
     display: flex;
     position: absolute;
     z-index: 1;
+    top: 50%;
 }
 
 .customizable-btn {
@@ -169,6 +170,10 @@ button {
     overflow: hidden;
     border-width: 5px;
     border-left: none;
+}
+
+#settings-sidebar, .customizable, .customizable-btn {
+    min-height: 20em;
 }
 
 div:has(> .board-info, > .resetbtn) {

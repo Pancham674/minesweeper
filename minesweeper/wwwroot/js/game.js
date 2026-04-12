@@ -18,7 +18,6 @@ $(document).ready(function () {
 
 
     let customizable = $(".customizable")[0];
-    let customizableHeight = customizable.offsetHeight; 
     $(customizable).hide();
 
     $(".customizable-btn").click(function () {
@@ -28,7 +27,6 @@ $(document).ready(function () {
             custombtn.innerHTML = `\<<br>\<`;
         }
         else {
-            custombtn.style.height = customizableHeight;
             custombtn.innerHTML = `\><br>\>`;
         }
         $(customizable).toggle("slow", "swing");
