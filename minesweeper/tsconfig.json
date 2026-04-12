@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "noEmitOnError": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "outDir": "./wwwroot/js",
+    //"allowJs": true,
+    "target": "es2020"
+  },
+  "exclude": [
+    "node_modules",
+    "./wwwroot/lib/*"
+  ]
+}

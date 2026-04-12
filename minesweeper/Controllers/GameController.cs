@@ -13,7 +13,7 @@ namespace minesweeper.Controllers
 		/// <returns>A View of Game with a random size, if the board hasn't been initialized yet. Otherwise it'll use it's previous size.</returns>
 		public IActionResult Start()
 		{
-			if (_board == null)
+			if (_board == null || _board.CellsCount == 0)
 			{
 				_board = new Board();
 			}

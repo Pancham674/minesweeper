@@ -1,45 +1,52 @@
-﻿let _lifesStat;
-let _boardModel;
-let _boardProgressStat;
-let _remainingFlagsStat;
+﻿//import $ from "jquery";
+//import * as  from "../../Models";
 
+let _boardModel;
+let _lifesStat: HTMLParagraphElement;
+let _boardProgressStat: HTMLParagraphElement;
+let _remainingFlagsStat: HTMLParagraphElement;
 
 $(() => {
     console.log("document is ready");
 
-    getPartialBoard("GetBoardView");
-    document.getElementById("partialBoard").oncontextmenu = function(e) { e.preventDefault(); };
-    document.getElementsByClassName(".buttons.resetsGame").onclick = function () { resetRound(this) };
+    _remainingFlagsStat = $("#remainingFlags")[0] as HTMLParagraphElement;
+    _boardProgressStat = $("#boardProgress")[0] as HTMLParagraphElement;
+    _lifesStat = $("#lifes")[0] as HTMLParagraphElement;
 
-    $(".resetbtn").click(function () {
-        let board = JSON.parse($("#board")[0].dataset.model);
-        resetRound(this, board.Columns, board.Rows);
-    });
+    getBoardView();
+    $("#partialBoard").on("contextmenu", function(e) { e.preventDefault(); });
 
+    let resetBtn: HTMLCollectionOf<HTMLButtonElement> = $(".buttons .resetsGame") as unknown as HTMLCollectionOf<HTMLButtonElement>;
+    for (let i = 0; i < resetBtn.length; i++){
+        (resetBtn[i] as HTMLButtonElement).onclick = function() { resetRound(resetBtn[i], null, null, null) };
+    }
 
-    let customizable = $(".customizable")[0];
+    ($(".resetbtn")[0] as HTMLButtonElement).onclick = function () {
+        let board = JSON.parse(($("#board")[0] as HTMLDivElement).dataset.model);
+        resetRound(this as HTMLElement, board.Columns, board.Rows, null);
+    };
+
+    let customizable: HTMLDivElement = $(".customizable")[0] as HTMLDivElement;
     $(customizable).hide();
 
-    $(".customizable-btn").click(function () {
-        let custombtn = this;
+    ($(".customizable-btn")[0] as HTMLButtonElement).onclick = function () {
+        let custombtn = this as HTMLButtonElement;
 
-        if (!customizable.checkVisibility()) {           //change the direction in custombtn based on if settings is shown or not
+        //change the direction in custombtn based on if settings is shown or not
+        if (!customizable.checkVisibility()) {
             custombtn.innerHTML = `\<<br>\<`;
         }
         else {
             custombtn.innerHTML = `\><br>\>`;
         }
         $(customizable).toggle("slow", "swing");
-    });
+    };
 
     //sets number input width to its placeholder text
-    $("input").each(function () {
-        this.setAttribute("size", this.getAttribute("placeholder").length);
-    });
-
-    _remainingFlagsStat = $("#remainingFlags")[0];
-    _boardProgressStat = $("#boardProgress")[0];
-    _lifesStat = $("#lifes")[0];
+    let inputs = $("input") as unknown as HTMLCollectionOf<HTMLInputElement>;
+    for (let i: number = 0; i < inputs.length; i++) {
+        inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
+    };
 })
 
 /**
@@ -47,7 +54,7 @@ $(() => {
 * If customColumn and -Row are undefined then the data will be retrieved from the sender.
 * Will not change life count stat if its undefined.
 */
-function resetRound(sender, customColumn, customRow, customLifesCount) {
+function resetRound(sender: HTMLElement, customColumn: number, customRow: number, customLifesCount: number):void {
     $.get("/Game/GetCurrentState", function (currentState, status) {
         console.log(`GetCurrentState from server was ${status}`);
         if (status !== "success") {
@@ -60,45 +67,70 @@ function resetRound(sender, customColumn, customRow, customLifesCount) {
             return;
         }
 
-        var column = customColumn === undefined ? $(sender).data("column") : customColumn;
-        var row = customRow === undefined ? $(sender).data("row") : customRow;
+        let column: number = customColumn === null ? parseInt($(sender).data("column")) : customColumn;
+        let row: number = customRow === null ? parseInt($(sender).data("row")) : customRow;
 
-        if (!customLifesCount) {
-            getPartialBoard("ResetRound", column, row);
+        if (!customLifesCount) {            //reset without setting life count
+            resetWithNewSize(column, row);
             return;
         }
 
-        getPartialBoard("ResetRoundAndSetLifes", column, row, customLifesCount);
+        resetGameWithNewSizeAndLifes(column, row, customLifesCount);
         console.log("Game has been reset");
     });
 }
 
 /**
- * Loads the #partialBoard element with a new Board, calls refreshCellEvents() and changeTitlesOnLoss().
- * Additional things happen if these specified parameters are defined:
- *    - column & row: resets with new custom size
- *    - customLifeCount: resets with different life count, column and row are required.
- * endPoint is required for all.
+ * Loads the #partialBoard element with a new Board and sets new life.
  */
-function getPartialBoard(endPoint, column, row, customLifesCount) {
-    $("#partialBoard").load("/Game/" + endPoint, { myColumn: column, myRow: row, myLifes: customLifesCount }, function (_, stat, xhr) {
-        console.log(`${endPoint} from server was ${stat}`);
+function resetGameWithNewSizeAndLifes(column, row, customLifesCount): void {
+    $("#partialBoard").load("/Game/ResetRoundAndSetLifes", { myColumn: column, myRow: row, myLifes: customLifesCount }, function (_, stat, xhr) {
+        console.log(`"ResetRoundAndSetLifes from server was ${stat}`);
 
         if (stat !== "success") {
             console.warn("xhr:", xhr);
             return;
         }
 
-        refreshCellEvents();
-        refreshBoardStats($("#board")[0]);
-        changeTitlesOnLoss();
+        refreshUIBoardElements();
     });
+}
+
+function resetWithNewSize(column: number, row: number): void {
+    $("#partialBoard").load("/Game/ResetRound", { myColumn: column, myRow: row }, function (_, stat, xhr) {
+        console.log(`ResetRound from server was ${stat}`);
+
+        if (stat !== "success") {
+            console.warn("xhr:", xhr);
+            return;
+        }
+
+        refreshUIBoardElements();
+    });
+}
+
+function getBoardView(): void {
+    $("#partialBoard").load("/Game/GetBoardView", function (_, stat, xhr) {
+        console.log(`GetBoardView from server was ${stat}`);
+
+        if (stat !== "success") {
+            console.warn("xhr:", xhr);
+            return;
+        }
+    });
+    refreshUIBoardElements();
+}
+
+function refreshUIBoardElements(): void {
+    refreshCellEvents();
+    refreshBoardStats($("#board")[0] as HTMLDivElement);
+    changeTitlesOnLoss();
 }
 
 /**
  * Refreshes the current statistics shown to the player.
  */
-function refreshBoardStats(currentBoard) {
+function refreshBoardStats(currentBoard: HTMLDivElement) {
     if (currentBoard.id) {
         _boardModel = JSON.parse(currentBoard.dataset.model);
     } else { _boardModel = currentBoard; }
@@ -112,7 +144,7 @@ function refreshBoardStats(currentBoard) {
     _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
 }
 
-function refreshAfterFlagToggle(currentSetFlagCount) {
+function refreshAfterFlagToggle(currentSetFlagCount: number)  {
     _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
 
@@ -120,7 +152,7 @@ function refreshAfterFlagToggle(currentSetFlagCount) {
  * Highlights the unrevealed neighbors of a revealed cell by adding or removing a classname based on if its currently hovered on or not.
  * Intended to help the player see the neighbors more clearly for chording.
  */
-function ToggleClassOnHover(cellModel, boardView, isHovering) {
+function ToggleClassOnHover(cellModel, boardView: HTMLElement, isHovering: boolean) {
     //only neighbors of revealed cells should be marked
     if (!cellModel.IsRevealed || cellModel.IsExploded) { return; }
 
@@ -131,7 +163,7 @@ function ToggleClassOnHover(cellModel, boardView, isHovering) {
         for (let row = cellModel.Row - 1; row < cellModel.Row + 2; row++) {
             if (row < 0 || row > _boardModel.Rows - 1) { continue; }        //dont go out of the board
 
-            const neighborView = boardView.children[row].children[col].firstElementChild;
+            const neighborView = boardView.children[row].children[col].firstElementChild as HTMLElement;
             const neighborModel = JSON.parse(neighborView.dataset.model);
 
             //ignore self, revealed cells and flagged cells since they shouldnt be marked/affected by chords
@@ -147,43 +179,42 @@ function ToggleClassOnHover(cellModel, boardView, isHovering) {
  * Accepts the custom size if its valid and calls resetRound with new attributes.
  */
 function confirmCustomSize() {
-    let customRow = $("#customRow")[0];
-    let customCol = $("#customColumn")[0];
+    let customRow: HTMLInputElement = $("#customRow")[0] as HTMLInputElement;
+    let customCol: HTMLInputElement = $("#customColumn")[0] as HTMLInputElement;
 
-    let customColValue = parseInt(customCol.value);
-    let customRowValue = parseInt(customRow.value);
+    let customColValue: number = parseInt(customCol.value);
+    let customRowValue: number = parseInt(customRow.value);
 
-    if (isNaN(customColValue) || customCol.min > customColValue || customCol.max < customColValue ||
-        isNaN(customRowValue) || customRow.min > customRowValue || customRow.max < customRowValue) {
+    if (isNaN(customColValue) || parseInt(customCol.min) > customColValue || parseInt(customCol.max) < customColValue ||
+        isNaN(customRowValue) || parseInt(customRow.min) > customRowValue || parseInt(customRow.max) < customRowValue) {
         alert("Please choose a value between "+ customCol.min +" and "+ customCol.max +".");
         return;
     }
 
-    resetRound(this, customColValue, customRowValue);
+    resetRound(this as HTMLElement, customColValue, customRowValue, null);
 }
 
 /**
  * Accepts the custom life count if its valid and calls resetRound with the new attribute.
  */
 function confirmLifeAmount() {
-    let customLifes = $("#customLifes")[0];
-    let customLifesValue = parseInt(customLifes.value);
+    let customLifes: HTMLInputElement = $("#customLifes")[0] as HTMLInputElement;
+    let customLifesValue: number = parseInt(customLifes.value);
 
-    if (isNaN(customLifesValue) || customLifes.min > customLifesValue || customLifes.max < customLifesValue) {
+    if (isNaN(customLifesValue) || parseInt(customLifes.min) > customLifesValue || parseInt(customLifes.max) < customLifesValue) {
         alert("Please choose a life amount between "+ customLifes.min +" and "+ customLifes.max +".");
         return;
     }
 
-    resetRound(this, _boardModel.Columns, _boardModel.Rows, customLifesValue);
+    resetRound(this as HTMLElement, _boardModel.Columns, _boardModel.Rows, customLifesValue);
 }
 
 /**
  * Changes both title and subtitle
  */
-function changeTitles(titleText, subtitleText, lossStreakCount) {
-    let title = $("#title")[0];
-    let subtitle = $("#subtitle")[0];
-    let previousSubtitle = subtitle.textContent;
+function changeTitles(titleText: string, subtitleText: string[]) {
+    let title: HTMLHeadingElement = $("#title")[0] as HTMLHeadingElement;
+    let subtitle: HTMLHeadingElement = $("#subtitle")[0] as HTMLHeadingElement;
 
     title.textContent = titleText;
     let chosenSubtitle = subtitleText[Math.floor(Math.random() * subtitleText.length)];
@@ -209,14 +240,14 @@ function changeTitles(titleText, subtitleText, lossStreakCount) {
 }
 
 function changeTitlesOnLoss() {
-    $.get("/Game/GetLossStreakCount", function (lossStreakCount, status) {
+    $.get("/Game/GetLossStreakCount", function (lossStreakCount: number, status) {
         console.log(`LossStreakCount from server was ${status}`);
-        if (status !== "success") {
+        if (status != "success") {
             console.warn(lossStreakCount);
             return;
         }
 
-        let subtitleText;               //show the amount of reties on subtitle
+        let subtitleText: string;               //show the amount of reties on subtitle
         switch (lossStreakCount) {
             case 0:
                 subtitleText = "st ";
