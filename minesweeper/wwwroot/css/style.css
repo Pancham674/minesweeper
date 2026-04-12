@@ -172,7 +172,7 @@ button {
     border-left: none;
 }
 
-#settings-sidebar, .customizable, .customizable-btn {
+#settings-sidebar, .customizable {
     min-height: 20em;
 }
 
