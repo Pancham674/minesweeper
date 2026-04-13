@@ -9,6 +9,22 @@ let _remainingFlagsStat: HTMLParagraphElement;
 $(() => {
     console.log("document is ready");
 
+    let customizable: HTMLDivElement = $(".customizable")[0] as HTMLDivElement;
+    $(customizable).hide();
+
+    ($(".customizable-btn")[0] as HTMLButtonElement).onclick = function () {
+        let custombtn = this as HTMLButtonElement;
+
+        //change the direction in custombtn based on if settings is shown or not
+        if (!customizable.checkVisibility()) {
+            custombtn.innerHTML = `\<<br>\<`;
+        }
+        else {
+            custombtn.innerHTML = `\><br>\>`;
+        }
+        $(customizable).toggle("slow", "swing");
+    };
+
     _remainingFlagsStat = $("#remainingFlags")[0] as HTMLParagraphElement;
     _boardProgressStat = $("#boardProgress")[0] as HTMLParagraphElement;
     _lifesStat = $("#lifes")[0] as HTMLParagraphElement;
@@ -26,21 +42,7 @@ $(() => {
         resetRound(this as HTMLElement, board.Columns, board.Rows, null);
     };
 
-    let customizable: HTMLDivElement = $(".customizable")[0] as HTMLDivElement;
-    $(customizable).hide();
 
-    ($(".customizable-btn")[0] as HTMLButtonElement).onclick = function () {
-        let custombtn = this as HTMLButtonElement;
-
-        //change the direction in custombtn based on if settings is shown or not
-        if (!customizable.checkVisibility()) {
-            custombtn.innerHTML = `\<<br>\<`;
-        }
-        else {
-            custombtn.innerHTML = `\><br>\>`;
-        }
-        $(customizable).toggle("slow", "swing");
-    };
 
     //sets number input width to its placeholder text
     let inputs = $("input") as unknown as HTMLCollectionOf<HTMLInputElement>;

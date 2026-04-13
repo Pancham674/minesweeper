@@ -6,6 +6,18 @@ let _boardProgressStat;
 let _remainingFlagsStat;
 $(() => {
     console.log("document is ready");
+    let customizable = $(".customizable")[0];
+    $(customizable).hide();
+    $(".customizable-btn")[0].onclick = function () {
+        let custombtn = this;
+        if (!customizable.checkVisibility()) {
+            custombtn.innerHTML = `\<<br>\<`;
+        }
+        else {
+            custombtn.innerHTML = `\><br>\>`;
+        }
+        $(customizable).toggle("slow", "swing");
+    };
     _remainingFlagsStat = $("#remainingFlags")[0];
     _boardProgressStat = $("#boardProgress")[0];
     _lifesStat = $("#lifes")[0];
@@ -18,18 +30,6 @@ $(() => {
     $(".resetbtn")[0].onclick = function () {
         let board = JSON.parse($("#board")[0].dataset.model);
         resetRound(this, board.Columns, board.Rows, null);
-    };
-    let customizable = $(".customizable")[0];
-    $(customizable).hide();
-    $(".customizable-btn")[0].onclick = function () {
-        let custombtn = this;
-        if (!customizable.checkVisibility()) {
-            custombtn.innerHTML = `\<<br>\<`;
-        }
-        else {
-            custombtn.innerHTML = `\><br>\>`;
-        }
-        $(customizable).toggle("slow", "swing");
     };
     let inputs = $("input");
     for (let i = 0; i < inputs.length; i++) {
