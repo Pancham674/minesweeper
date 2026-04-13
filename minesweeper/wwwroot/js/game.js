@@ -1,5 +1,5 @@
 import * as Model from "./Model.js";
-import { refreshCellEvents } from "./cell.js";
+import { GetCellModel, refreshCellEvents } from "./cell.js";
 let _boardModel;
 let _lifesStat;
 let _boardProgressStat;
@@ -28,14 +28,17 @@ $(() => {
         resetBtn[i].onclick = function () { resetRound(resetBtn[i], null, null, null); };
     }
     $(".resetbtn")[0].onclick = function () {
-        let board = JSON.parse($("#board")[0].dataset.model);
-        resetRound(this, board.Columns, board.Rows, null);
+        let boardCol = parseInt($("#board")[0].dataset.columns);
+        let boardRow = parseInt($("#board")[0].dataset.rows);
+        resetRound(this, boardCol, boardRow, null);
     };
     let inputs = $("input");
     for (let i = 0; i < inputs.length; i++) {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     }
     ;
+    $(".customSizeBtn").onclick = () => confirmCustomSize();
+    $(".customLifeBtn").onclick = () => confirmLifeAmount();
 });
 function resetRound(sender, customColumn, customRow, customLifesCount) {
     $.get("/Game/GetCurrentState", function (currentState, status) {
@@ -90,21 +93,22 @@ function getBoardView() {
 }
 function refreshUIBoardElements() {
     refreshCellEvents();
-    refreshBoardStats($("#board")[0]);
+    refreshBoardStats();
     changeTitlesOnLoss();
 }
-export function refreshBoardStats(currentBoard) {
-    if (currentBoard.id) {
-        _boardModel = JSON.parse(currentBoard.dataset.model);
-    }
-    else {
-        _boardModel = currentBoard;
-    }
-    console.log("boardModel has been updated to current");
-    refreshAfterFlagToggle(_boardModel.SetFlagCount);
-    _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
-    let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
-    _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+export function refreshBoardStats() {
+    $.getJSON("/Game/GetBoardModel", function (boardModelObject, status) {
+        if (status != "success") {
+            console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
+            return;
+        }
+        console.log("boardModel has been updated to current");
+        _boardModel = boardModelObject;
+        refreshAfterFlagToggle(_boardModel.SetFlagCount);
+        _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
+        let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
+        _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+    });
 }
 export function refreshAfterFlagToggle(currentSetFlagCount) {
     _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
@@ -122,7 +126,7 @@ export function toggleClassOnHover(cellModel, boardView, isHovering) {
                 continue;
             }
             const neighborView = boardView.children[row].children[col].firstElementChild;
-            const neighborModel = JSON.parse(neighborView.dataset.model);
+            const neighborModel = GetCellModel(neighborView);
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) {
                 continue;
             }

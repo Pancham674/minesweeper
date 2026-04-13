@@ -1,5 +1,5 @@
 ﻿import  * as Model from "./Model.js"
-import { refreshCellEvents } from "./cell.js"
+import { GetCellModel, refreshCellEvents } from "./cell.js"
 
 let _boardModel;
 let _lifesStat: HTMLParagraphElement;
@@ -38,17 +38,19 @@ $(() => {
     }
 
     ($(".resetbtn")[0] as HTMLButtonElement).onclick = function () {
-        let board = JSON.parse(($("#board")[0] as HTMLDivElement).dataset.model);
-        resetRound(this as HTMLElement, board.Columns, board.Rows, null);
+        let boardCol = parseInt(($("#board")[0] as HTMLDivElement).dataset.columns);
+        let boardRow = parseInt(($("#board")[0] as HTMLDivElement).dataset.rows);
+        resetRound(this as HTMLElement, boardCol, boardRow, null);
     };
-
-
 
     //sets number input width to its placeholder text
     let inputs = $("input") as unknown as HTMLCollectionOf<HTMLInputElement>;
     for (let i: number = 0; i < inputs.length; i++) {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     };
+
+    ($(".customSizeBtn") as unknown as HTMLButtonElement).onclick = () => confirmCustomSize(); 
+    ($(".customLifeBtn") as unknown as HTMLButtonElement).onclick = () => confirmLifeAmount(); 
 })
 
 /**
@@ -125,25 +127,35 @@ function getBoardView(): void {
 
 function refreshUIBoardElements(): void {
     refreshCellEvents();
-    refreshBoardStats($("#board")[0] as HTMLDivElement);
+    refreshBoardStats();
     changeTitlesOnLoss();
 }
 
 /**
  * Refreshes the current statistics shown to the player.
  */
-export function refreshBoardStats(currentBoard: HTMLDivElement) {
-    if (currentBoard.id) {
-        _boardModel = JSON.parse(currentBoard.dataset.model);
-    } else { _boardModel = currentBoard; }
+export function refreshBoardStats() {
+    //if (currentBoard.id) {
+    //    _boardModel = new Model.Board(parseInt(currentBoard.dataset.columns),
+    //                                  parseInt(currentBoard.dataset.rows),
+    //                                  parseInt(currentBoard.dataset.cellsCount),
+    //                                  parseInt(currentBoard.dataset.bombsCount));
+    //} else { _boardModel = currentBoard; }
 
-    console.log("boardModel has been updated to current")
+    $.getJSON("/Game/GetBoardModel", function (boardModelObject, status) {
+        if (status != "success") {
+            console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
+            return;
+        }
+        console.log("boardModel has been updated to current")
+        _boardModel = boardModelObject;
 
-    refreshAfterFlagToggle(_boardModel.SetFlagCount);
-    _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
+        refreshAfterFlagToggle(_boardModel.SetFlagCount);
+        _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
 
-    let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
-    _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+        let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
+        _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+    });
 }
 
 export function refreshAfterFlagToggle(currentSetFlagCount: number)  {
@@ -165,8 +177,8 @@ export function toggleClassOnHover(cellModel, boardView: HTMLElement, isHovering
         for (let row = cellModel.Row - 1; row < cellModel.Row + 2; row++) {
             if (row < 0 || row > _boardModel.Rows - 1) { continue; }        //dont go out of the board
 
-            const neighborView = boardView.children[row].children[col].firstElementChild as HTMLElement;
-            const neighborModel = JSON.parse(neighborView.dataset.model);
+            const neighborView = boardView.children[row].children[col].firstElementChild as HTMLButtonElement;
+            const neighborModel = GetCellModel(neighborView);
 
             //ignore self, revealed cells and flagged cells since they shouldnt be marked/affected by chords
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) { continue; }
