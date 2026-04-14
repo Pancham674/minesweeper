@@ -1,7 +1,7 @@
 ﻿import  * as Model from "./Model.js"
 import { GetCellModel, refreshCellEvents } from "./cell.js"
 
-let _boardModel;
+let _boardModel: Model.Board;
 let _lifesStat: HTMLParagraphElement;
 let _boardProgressStat: HTMLParagraphElement;
 let _remainingFlagsStat: HTMLParagraphElement;
@@ -38,9 +38,7 @@ $(() => {
     }
 
     ($(".resetbtn")[0] as HTMLButtonElement).onclick = function () {
-        let boardCol = parseInt(($("#board")[0] as HTMLDivElement).dataset.columns);
-        let boardRow = parseInt(($("#board")[0] as HTMLDivElement).dataset.rows);
-        resetRound(this as HTMLElement, boardCol, boardRow, null);
+        resetRound(this as HTMLElement, _boardModel.Columns, _boardModel.Rows, null);
     };
 
     //sets number input width to its placeholder text
@@ -135,20 +133,13 @@ function refreshUIBoardElements(): void {
  * Refreshes the current statistics shown to the player.
  */
 export function refreshBoardStats() {
-    //if (currentBoard.id) {
-    //    _boardModel = new Model.Board(parseInt(currentBoard.dataset.columns),
-    //                                  parseInt(currentBoard.dataset.rows),
-    //                                  parseInt(currentBoard.dataset.cellsCount),
-    //                                  parseInt(currentBoard.dataset.bombsCount));
-    //} else { _boardModel = currentBoard; }
-
     $.getJSON("/Game/GetBoardModel", function (boardModelObject, status) {
         if (status != "success") {
             console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
             return;
         }
         console.log("boardModel has been updated to current")
-        _boardModel = boardModelObject;
+        _boardModel = GetBoardModel(boardModelObject);
 
         refreshAfterFlagToggle(_boardModel.SetFlagCount);
         _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
@@ -285,4 +276,17 @@ function changeTitlesOnLoss() {
         subtitlesArray.push("Gotta sweep, sweep, sweep!");                      //1% (1/100) chance to get this text
         changeTitles("Good luck!", subtitlesArray);
     });
+}
+
+function GetBoardModel(boardModelJSON: any): Model.Board {
+    let col: number = parseInt(boardModelJSON.Columns);
+    let row: number = parseInt(boardModelJSON.Rows);
+    let cCount: number = parseInt(boardModelJSON.CellsCount);
+
+    let bCount: number = parseInt(boardModelJSON.BombsCount);
+    let lCount: number = parseInt(boardModelJSON.LifeCount);
+    let sFCount: number = parseInt(boardModelJSON.SetFlagCount);
+    let rCCount: number = parseInt(boardModelJSON.RevealedCellsCount);
+
+    return new Model.Board(col, row, cCount, bCount, lCount, sFCount, rCCount);
 }

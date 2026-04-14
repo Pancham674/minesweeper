@@ -28,9 +28,7 @@ $(() => {
         resetBtn[i].onclick = function () { resetRound(resetBtn[i], null, null, null); };
     }
     $(".resetbtn")[0].onclick = function () {
-        let boardCol = parseInt($("#board")[0].dataset.columns);
-        let boardRow = parseInt($("#board")[0].dataset.rows);
-        resetRound(this, boardCol, boardRow, null);
+        resetRound(this, _boardModel.Columns, _boardModel.Rows, null);
     };
     let inputs = $("input");
     for (let i = 0; i < inputs.length; i++) {
@@ -103,7 +101,7 @@ export function refreshBoardStats() {
             return;
         }
         console.log("boardModel has been updated to current");
-        _boardModel = boardModelObject;
+        _boardModel = GetBoardModel(boardModelObject);
         refreshAfterFlagToggle(_boardModel.SetFlagCount);
         _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
         let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
@@ -209,5 +207,15 @@ function changeTitlesOnLoss() {
         subtitlesArray.push("Gotta sweep, sweep, sweep!");
         changeTitles("Good luck!", subtitlesArray);
     });
+}
+function GetBoardModel(boardModelJSON) {
+    let col = parseInt(boardModelJSON.Columns);
+    let row = parseInt(boardModelJSON.Rows);
+    let cCount = parseInt(boardModelJSON.CellsCount);
+    let bCount = parseInt(boardModelJSON.BombsCount);
+    let lCount = parseInt(boardModelJSON.LifeCount);
+    let sFCount = parseInt(boardModelJSON.SetFlagCount);
+    let rCCount = parseInt(boardModelJSON.RevealedCellsCount);
+    return new Model.Board(col, row, cCount, bCount, lCount, sFCount, rCCount);
 }
 //# sourceMappingURL=game.js.map

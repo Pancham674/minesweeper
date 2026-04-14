@@ -6,11 +6,14 @@ export var RoundState;
     RoundState[RoundState["Won"] = 3] = "Won";
 })(RoundState || (RoundState = {}));
 export class Board {
-    constructor(columns, rows, cellsCount, bombsCount) {
+    constructor(columns, rows, cellsCount, bombsCount, lifeCount, setFlagCount, revealedCellsCount) {
         this.Columns = columns;
         this.Rows = rows;
         this.CellsCount = cellsCount;
         this.BombsCount = bombsCount;
+        this.LifeCount = lifeCount;
+        this.SetFlagCount = setFlagCount;
+        this.RevealedCellsCount = revealedCellsCount;
     }
 }
 export class Cell {

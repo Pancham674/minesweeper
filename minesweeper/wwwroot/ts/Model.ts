@@ -10,12 +10,18 @@ export class Board {
     Rows: number;
     CellsCount: number;
     BombsCount: number;
+    LifeCount: number;
+    SetFlagCount: number;
+    RevealedCellsCount: number;
 
-    constructor(columns: number, rows: number, cellsCount: number, bombsCount: number) { 
+    constructor(columns: number, rows: number, cellsCount: number, bombsCount: number, lifeCount: number, setFlagCount: number, revealedCellsCount: number) { 
         this.Columns = columns;
         this.Rows = rows;
         this.CellsCount = cellsCount;
         this.BombsCount = bombsCount;
+        this.LifeCount = lifeCount;
+        this.SetFlagCount = setFlagCount;
+        this.RevealedCellsCount = revealedCellsCount;
     }
 }
 

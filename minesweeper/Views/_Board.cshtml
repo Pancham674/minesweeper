@@ -1,10 +1,5 @@
 ﻿@model Board
-<div id="board"
-    data-columns='@Model.Columns'
-    data-rows='@Model.Rows'
-    data-cellsCount='@Model.CellsCount'
-    data-bombCount='@Model.BombsCount'>
-    
+<div id="board">
     @for (int r = 0; r < Model.Rows; r++)
     {
         <div class="board-row">
