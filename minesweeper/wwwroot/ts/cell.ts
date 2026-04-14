@@ -28,22 +28,23 @@ export function refreshCellEvents() {
                     //if round was lost, by clicking a bomb, then this would be false
                     if (revealedCellsArray.length == 0) { console.log("the click didnt do anything."); }
                     else {
+                        //update clicked cellModel
                         cellModel = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
-
                         let boardView = $("#board")[0] as HTMLDivElement;
-                        revealedCellsArray.forEach(function (cell) {
-                            console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
-                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column] as HTMLDivElement;
+
+                        revealedCellsArray.forEach(function (currentCell: Model.Cell) {
+                            console.log("c", currentCell.Column, "r", currentCell.Row, "was affected and is now revealed.");
+                            let affectedPartialCell = boardView.children[currentCell.Row].children[currentCell.Column] as HTMLDivElement;
 
                             //refresh every cell, that has been affected, by reloading its partialCell
-                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
+                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: currentCell.Column, myRow: currentCell.Row }, function (_, status, xhr) {
                                 if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
 
-                                //change class if it has no bombs around it and make it uninteractable
-                                if (cell.IsRevealed && cell.NeighboringBombs == 0) { affectedPartialCell.firstElementChild.className = "empty cell"; }
+                                //change class if it has no bombs around it
+                                if (currentCell.NeighboringBombs == 0) { affectedPartialCell.firstElementChild.className = "empty cell"; }
                             });
                         });
                     }
@@ -130,6 +131,10 @@ function OnRoundFinished(isRoundWon: boolean) {
     });
 }
 
+/**
+ * Gets the cell model from a given HTML button element.  
+ * @returns The cell model as a Model.Cell class.
+ */
 export function GetCellModel(cellView: HTMLButtonElement): Model.Cell {
     let column: number = parseInt(cellView.dataset.column);
     let row: number = parseInt(cellView.dataset.row);

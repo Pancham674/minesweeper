@@ -138,8 +138,8 @@ export function refreshBoardStats() {
             console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
             return;
         }
-        console.log("boardModel has been updated to current")
         _boardModel = GetBoardModel(boardModelObject);
+        console.log("boardModel has been updated to current")
 
         refreshAfterFlagToggle(_boardModel.SetFlagCount);
         _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
@@ -278,6 +278,11 @@ function changeTitlesOnLoss() {
     });
 }
 
+/**
+ * * Gets the board model from a given JSON object.
+ * @param boardModelJSON
+ * @returns The board model as a Model.Board class.
+ */
 function GetBoardModel(boardModelJSON: any): Model.Board {
     let col: number = parseInt(boardModelJSON.Columns);
     let row: number = parseInt(boardModelJSON.Rows);

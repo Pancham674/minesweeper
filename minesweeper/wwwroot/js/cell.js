@@ -22,15 +22,15 @@ export function refreshCellEvents() {
                     else {
                         cellModel = GetCellModel(partialCell.firstElementChild);
                         let boardView = $("#board")[0];
-                        revealedCellsArray.forEach(function (cell) {
-                            console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
-                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column];
-                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
+                        revealedCellsArray.forEach(function (currentCell) {
+                            console.log("c", currentCell.Column, "r", currentCell.Row, "was affected and is now revealed.");
+                            let affectedPartialCell = boardView.children[currentCell.Row].children[currentCell.Column];
+                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: currentCell.Column, myRow: currentCell.Row }, function (_, status, xhr) {
                                 if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
-                                if (cell.IsRevealed && cell.NeighboringBombs == 0) {
+                                if (currentCell.NeighboringBombs == 0) {
                                     affectedPartialCell.firstElementChild.className = "empty cell";
                                 }
                             });

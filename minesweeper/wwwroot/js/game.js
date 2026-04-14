@@ -100,8 +100,8 @@ export function refreshBoardStats() {
             console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
             return;
         }
-        console.log("boardModel has been updated to current");
         _boardModel = GetBoardModel(boardModelObject);
+        console.log("boardModel has been updated to current");
         refreshAfterFlagToggle(_boardModel.SetFlagCount);
         _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
         let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
