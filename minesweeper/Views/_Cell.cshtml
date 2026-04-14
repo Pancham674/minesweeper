@@ -1,7 +1,12 @@
 ﻿@model Cell
 
 <button class="cell"
-    data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
+    data-column='@Model.Column'
+    data-row='@Model.Row'
+    data-neighboringBombs='@Model.NeighboringBombs'
+    data-isFlagged='@Model.IsFlagged'
+    data-isRevealed='@Model.IsRevealed'
+    data-isExploded='@Model.IsExploded'>
         @(
             Model.IsExploded ? "💥" :
                 !Model.IsRevealed && Model.IsFlagged ? "🚩" :

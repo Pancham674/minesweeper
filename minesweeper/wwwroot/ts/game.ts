@@ -1,7 +1,7 @@
 ﻿import  * as Model from "./Model.js"
-import { refreshCellEvents } from "./cell.js"
+import { GetCellModel, refreshCellEvents } from "./cell.js"
 
-let _boardModel;
+let _boardModel: Model.Board;
 let _lifesStat: HTMLParagraphElement;
 let _boardProgressStat: HTMLParagraphElement;
 let _remainingFlagsStat: HTMLParagraphElement;
@@ -38,17 +38,17 @@ $(() => {
     }
 
     ($(".resetbtn")[0] as HTMLButtonElement).onclick = function () {
-        let board = JSON.parse(($("#board")[0] as HTMLDivElement).dataset.model);
-        resetRound(this as HTMLElement, board.Columns, board.Rows, null);
+        resetRound(this as HTMLElement, _boardModel.Columns, _boardModel.Rows, null);
     };
-
-
 
     //sets number input width to its placeholder text
     let inputs = $("input") as unknown as HTMLCollectionOf<HTMLInputElement>;
     for (let i: number = 0; i < inputs.length; i++) {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     };
+
+    ($(".customSizeBtn")[0] as HTMLButtonElement).onclick = () => confirmCustomSize(); 
+    ($(".customLifeBtn")[0] as HTMLButtonElement).onclick = () => confirmLifeAmount(); 
 })
 
 /**
@@ -125,25 +125,28 @@ function getBoardView(): void {
 
 function refreshUIBoardElements(): void {
     refreshCellEvents();
-    refreshBoardStats($("#board")[0] as HTMLDivElement);
+    refreshBoardStats();
     changeTitlesOnLoss();
 }
 
 /**
  * Refreshes the current statistics shown to the player.
  */
-export function refreshBoardStats(currentBoard: HTMLDivElement) {
-    if (currentBoard.id) {
-        _boardModel = JSON.parse(currentBoard.dataset.model);
-    } else { _boardModel = currentBoard; }
+export function refreshBoardStats() {
+    $.getJSON("/Game/GetBoardModel", function (boardModelObject, status) {
+        if (status != "success") {
+            console.warn("GetBoardModel from server resulted in an error:", boardModelObject);
+            return;
+        }
+        _boardModel = GetBoardModel(boardModelObject);
+        console.log("boardModel has been updated to current")
 
-    console.log("boardModel has been updated to current")
+        refreshAfterFlagToggle(_boardModel.SetFlagCount);
+        _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
 
-    refreshAfterFlagToggle(_boardModel.SetFlagCount);
-    _lifesStat.innerHTML = `<b>Lifes:</b><br>${_boardModel.LifeCount}`;
-
-    let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
-    _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+        let nonBombCellsCount = _boardModel.CellsCount - _boardModel.BombsCount;
+        _boardProgressStat.innerHTML = `<b>Covered Cells:</b><br>${nonBombCellsCount - _boardModel.RevealedCellsCount}/${nonBombCellsCount}`;
+    });
 }
 
 export function refreshAfterFlagToggle(currentSetFlagCount: number)  {
@@ -154,9 +157,10 @@ export function refreshAfterFlagToggle(currentSetFlagCount: number)  {
  * Highlights the unrevealed neighbors of a revealed cell by adding or removing a classname based on if its currently hovered on or not.
  * Intended to help the player see the neighbors more clearly for chording.
  */
-export function toggleClassOnHover(cellModel, boardView: HTMLElement, isHovering: boolean) {
+export function toggleClassOnHover(cellModel: Model.Cell, isHovering: boolean) {
     //only neighbors of revealed cells should be marked
     if (!cellModel.IsRevealed || cellModel.IsExploded) { return; }
+    let boardView: HTMLDivElement = $("#board")[0] as HTMLDivElement;
 
     //loop around cellModels neighbors
     for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {
@@ -165,8 +169,8 @@ export function toggleClassOnHover(cellModel, boardView: HTMLElement, isHovering
         for (let row = cellModel.Row - 1; row < cellModel.Row + 2; row++) {
             if (row < 0 || row > _boardModel.Rows - 1) { continue; }        //dont go out of the board
 
-            const neighborView = boardView.children[row].children[col].firstElementChild as HTMLElement;
-            const neighborModel = JSON.parse(neighborView.dataset.model);
+            const neighborView = boardView.children[row].children[col].firstElementChild as HTMLButtonElement;
+            const neighborModel = GetCellModel(neighborView);
 
             //ignore self, revealed cells and flagged cells since they shouldnt be marked/affected by chords
             if (neighborModel === cellModel || neighborModel.IsRevealed || neighborModel.IsFlagged) { continue; }
@@ -272,4 +276,22 @@ function changeTitlesOnLoss() {
         subtitlesArray.push("Gotta sweep, sweep, sweep!");                      //1% (1/100) chance to get this text
         changeTitles("Good luck!", subtitlesArray);
     });
+}
+
+/**
+ * * Gets the board model from a given JSON object.
+ * @param boardModelJSON
+ * @returns The board model as a Model.Board class.
+ */
+function GetBoardModel(boardModelJSON: any): Model.Board {
+    let col: number = parseInt(boardModelJSON.Columns);
+    let row: number = parseInt(boardModelJSON.Rows);
+    let cCount: number = parseInt(boardModelJSON.CellsCount);
+
+    let bCount: number = parseInt(boardModelJSON.BombsCount);
+    let lCount: number = parseInt(boardModelJSON.LifeCount);
+    let sFCount: number = parseInt(boardModelJSON.SetFlagCount);
+    let rCCount: number = parseInt(boardModelJSON.RevealedCellsCount);
+
+    return new Model.Board(col, row, cCount, bCount, lCount, sFCount, rCCount);
 }

@@ -3,7 +3,7 @@ import { toggleClassOnHover, refreshBoardStats, changeTitles, refreshAfterFlagTo
 export function refreshCellEvents() {
     $('.partialCell').each(function () {
         let partialCell = this;
-        let cellModel = JSON.parse(partialCell.firstElementChild.dataset.model);
+        let cellModel = GetCellModel(partialCell.firstElementChild);
         $(partialCell).on({
             click: function () {
                 if (cellModel.IsFlagged) {
@@ -20,16 +20,17 @@ export function refreshCellEvents() {
                         console.log("the click didnt do anything.");
                     }
                     else {
+                        cellModel = GetCellModel(partialCell.firstElementChild);
                         let boardView = $("#board")[0];
-                        revealedCellsArray.forEach(function (cell) {
-                            console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
-                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column];
-                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
+                        revealedCellsArray.forEach(function (currentCell) {
+                            console.log("c", currentCell.Column, "r", currentCell.Row, "was affected and is now revealed.");
+                            let affectedPartialCell = boardView.children[currentCell.Row].children[currentCell.Column];
+                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: currentCell.Column, myRow: currentCell.Row }, function (_, status, xhr) {
                                 if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
-                                if (cell.IsRevealed && cell.NeighboringBombs == 0) {
+                                if (currentCell.NeighboringBombs == 0) {
                                     affectedPartialCell.firstElementChild.className = "empty cell";
                                 }
                             });
@@ -44,13 +45,7 @@ export function refreshCellEvents() {
                             OnRoundFinished(currentState == Model.RoundState.Won);
                         }
                     });
-                    $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
-                        if (status != "success") {
-                            console.warn("GetBoardModel from server resulted in an error:", boardModel);
-                            return;
-                        }
-                        refreshBoardStats(boardModel);
-                    });
+                    refreshBoardStats();
                 });
             },
             contextmenu: function () {
@@ -69,7 +64,7 @@ export function refreshCellEvents() {
                             console.warn("GetCellView from server occured in an error:", xhr);
                             return;
                         }
-                        cellModel = JSON.parse(partialCell.firstElementChild.dataset.model);
+                        cellModel = GetCellModel(partialCell.firstElementChild);
                         $.get("/Game/GetSetFlagCount", (setFlagCount, status) => {
                             if (status != "success") {
                                 console.warn("GetSetFlagCount from server occured in an error:", setFlagCount);
@@ -80,8 +75,8 @@ export function refreshCellEvents() {
                     });
                 });
             },
-            mouseenter: function () { toggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, true); },
-            mouseleave: function () { toggleClassOnHover(JSON.parse(partialCell.firstElementChild.dataset.model), partialCell.parentElement.parentElement, false); }
+            mouseenter: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild), true); },
+            mouseleave: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild), false); }
         });
     });
 }
@@ -93,7 +88,7 @@ function OnRoundFinished(isRoundWon) {
             return;
         }
         $(".partialCell > button").each(function (i, cellView) {
-            let cellModel = JSON.parse(cellView.dataset.model);
+            let cellModel = GetCellModel(cellView);
             if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
                 cellView.className = "empty cell";
             }
@@ -106,5 +101,14 @@ function OnRoundFinished(isRoundWon) {
             changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
         }
     });
+}
+export function GetCellModel(cellView) {
+    let column = parseInt(cellView.dataset.column);
+    let row = parseInt(cellView.dataset.row);
+    let neighboringBombs = parseInt(cellView.dataset.neighboringbombs);
+    let isFlagged = cellView.dataset.isflagged.toLowerCase() == "true";
+    let isRevealed = cellView.dataset.isrevealed.toLowerCase() == "true";
+    let isExploded = cellView.dataset.isexploded.toLowerCase() == "true";
+    return new Model.Cell(column, row, neighboringBombs, isFlagged, isRevealed, isExploded);
 }
 //# sourceMappingURL=cell.js.map

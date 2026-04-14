@@ -1,6 +1,5 @@
 ﻿@model Board
-<div id="board" data-model='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))'>
-    
+<div id="board">
     @for (int r = 0; r < Model.Rows; r++)
     {
         <div class="board-row">

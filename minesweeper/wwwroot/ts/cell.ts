@@ -8,7 +8,7 @@ import { toggleClassOnHover, refreshBoardStats, changeTitles, refreshAfterFlagTo
 export function refreshCellEvents() {
     $('.partialCell').each(function () {
         let partialCell = this as HTMLDivElement;
-        let cellModel = JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model);
+        let cellModel: Model.Cell = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
 
         $(partialCell).on({         //attach click, contextmenu, mouseenter and -leave eventhandlers
             click: function () {
@@ -28,20 +28,23 @@ export function refreshCellEvents() {
                     //if round was lost, by clicking a bomb, then this would be false
                     if (revealedCellsArray.length == 0) { console.log("the click didnt do anything."); }
                     else {
+                        //update clicked cellModel
+                        cellModel = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
                         let boardView = $("#board")[0] as HTMLDivElement;
-                        revealedCellsArray.forEach(function (cell) {
-                            console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
-                            let affectedPartialCell = boardView.children[cell.Row].children[cell.Column] as HTMLDivElement;
+
+                        revealedCellsArray.forEach(function (currentCell: Model.Cell) {
+                            console.log("c", currentCell.Column, "r", currentCell.Row, "was affected and is now revealed.");
+                            let affectedPartialCell = boardView.children[currentCell.Row].children[currentCell.Column] as HTMLDivElement;
 
                             //refresh every cell, that has been affected, by reloading its partialCell
-                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: cell.Column, myRow: cell.Row }, function (_, status, xhr) {
+                            $(affectedPartialCell).load("/Game/GetCellView", { myColumn: currentCell.Column, myRow: currentCell.Row }, function (_, status, xhr) {
                                 if (status != "success") {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
 
-                                //change class if it has no bombs around it and make it uninteractable
-                                if (cell.IsRevealed && cell.NeighboringBombs == 0) { affectedPartialCell.firstElementChild.className = "empty cell"; }
+                                //change class if it has no bombs around it
+                                if (currentCell.NeighboringBombs == 0) { affectedPartialCell.firstElementChild.className = "empty cell"; }
                             });
                         });
                     }
@@ -57,15 +60,8 @@ export function refreshCellEvents() {
                             OnRoundFinished(currentState == Model.RoundState.Won);
                         }
                     });
-
-                    //get the current boardModel to update all stat elements
-                    $.getJSON("/Game/GetBoardModel", function (boardModel, status) {
-                        if (status != "success") {
-                            console.warn("GetBoardModel from server resulted in an error:", boardModel);
-                            return;
-                        }
-                        refreshBoardStats(boardModel);
-                    });
+                   
+                    refreshBoardStats();
                 });
             },
 
@@ -82,14 +78,13 @@ export function refreshCellEvents() {
                     }
 
                     console.log("Flag was toggled on cell in c", cellModel.Column, " r", cellModel.Row, "was : ", status);
-
                     $(partialCell).load("/Game/GetCellView", { myColumn: cellModel.Column, myRow: cellModel.Row }, function (_, status, xhr) {
                         if (status != "success") {
                             console.warn("GetCellView from server occured in an error:", xhr);
                             return;
                         }
 
-                        cellModel = JSON.parse((partialCell.firstElementChild as HTMLElement).dataset.model);
+                        cellModel = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
 
                         $.get("/Game/GetSetFlagCount", (setFlagCount, status) => {
                             if (status != "success") {
@@ -102,8 +97,8 @@ export function refreshCellEvents() {
                 });
             },
 
-            mouseenter: function () { toggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, true); },
-            mouseleave: function () { toggleClassOnHover(JSON.parse((partialCell.firstElementChild as HTMLButtonElement).dataset.model), partialCell.parentElement.parentElement as HTMLDivElement, false); }
+            mouseenter: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild as HTMLButtonElement), true); },
+            mouseleave: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild as HTMLButtonElement), false); }
         });
     });
 }
@@ -120,7 +115,7 @@ function OnRoundFinished(isRoundWon: boolean) {
         }
 
         $(".partialCell > button").each(function (i, cellView: HTMLButtonElement) {
-            let cellModel = JSON.parse(cellView.dataset.model);
+            let cellModel = GetCellModel(cellView);
 
             if (cellModel.IsRevealed && cellModel.NeighboringBombs == 0) {
                 cellView.className = "empty cell";
@@ -134,4 +129,20 @@ function OnRoundFinished(isRoundWon: boolean) {
             changeTitles("Game Over!", ["You lost the game!", "Better luck next time", "Stay determined!"]);
         }
     });
+}
+
+/**
+ * Gets the cell model from a given HTML button element.  
+ * @returns The cell model as a Model.Cell class.
+ */
+export function GetCellModel(cellView: HTMLButtonElement): Model.Cell {
+    let column: number = parseInt(cellView.dataset.column);
+    let row: number = parseInt(cellView.dataset.row);
+    let neighboringBombs: number = parseInt(cellView.dataset.neighboringbombs);
+
+    let isFlagged: boolean = cellView.dataset.isflagged.toLowerCase() == "true";
+    let isRevealed: boolean = cellView.dataset.isrevealed.toLowerCase() == "true";
+    let isExploded: boolean = cellView.dataset.isexploded.toLowerCase() == "true";
+
+    return new Model.Cell(column, row, neighboringBombs, isFlagged, isRevealed, isExploded);
 }
