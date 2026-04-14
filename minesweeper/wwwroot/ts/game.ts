@@ -49,8 +49,8 @@ $(() => {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     };
 
-    ($(".customSizeBtn") as unknown as HTMLButtonElement).onclick = () => confirmCustomSize(); 
-    ($(".customLifeBtn") as unknown as HTMLButtonElement).onclick = () => confirmLifeAmount(); 
+    ($(".customSizeBtn")[0] as HTMLButtonElement).onclick = () => confirmCustomSize(); 
+    ($(".customLifeBtn")[0] as HTMLButtonElement).onclick = () => confirmLifeAmount(); 
 })
 
 /**
@@ -166,9 +166,10 @@ export function refreshAfterFlagToggle(currentSetFlagCount: number)  {
  * Highlights the unrevealed neighbors of a revealed cell by adding or removing a classname based on if its currently hovered on or not.
  * Intended to help the player see the neighbors more clearly for chording.
  */
-export function toggleClassOnHover(cellModel, boardView: HTMLElement, isHovering: boolean) {
+export function toggleClassOnHover(cellModel: Model.Cell, isHovering: boolean) {
     //only neighbors of revealed cells should be marked
     if (!cellModel.IsRevealed || cellModel.IsExploded) { return; }
+    let boardView: HTMLDivElement = $("#board")[0] as HTMLDivElement;
 
     //loop around cellModels neighbors
     for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {

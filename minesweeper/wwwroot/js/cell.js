@@ -20,6 +20,7 @@ export function refreshCellEvents() {
                         console.log("the click didnt do anything.");
                     }
                     else {
+                        cellModel = GetCellModel(partialCell.firstElementChild);
                         let boardView = $("#board")[0];
                         revealedCellsArray.forEach(function (cell) {
                             console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
@@ -29,7 +30,6 @@ export function refreshCellEvents() {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
-                                cellModel = GetCellModel(partialCell.firstElementChild);
                                 if (cell.IsRevealed && cell.NeighboringBombs == 0) {
                                     affectedPartialCell.firstElementChild.className = "empty cell";
                                 }
@@ -75,8 +75,8 @@ export function refreshCellEvents() {
                     });
                 });
             },
-            mouseenter: function () { toggleClassOnHover(cellModel, partialCell.parentElement.parentElement, true); },
-            mouseleave: function () { toggleClassOnHover(cellModel, partialCell.parentElement.parentElement, false); }
+            mouseenter: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild), true); },
+            mouseleave: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild), false); }
         });
     });
 }

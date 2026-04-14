@@ -28,6 +28,8 @@ export function refreshCellEvents() {
                     //if round was lost, by clicking a bomb, then this would be false
                     if (revealedCellsArray.length == 0) { console.log("the click didnt do anything."); }
                     else {
+                        cellModel = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
+
                         let boardView = $("#board")[0] as HTMLDivElement;
                         revealedCellsArray.forEach(function (cell) {
                             console.log("c", cell.Column, "r", cell.Row, "was affected and is now revealed.");
@@ -39,7 +41,6 @@ export function refreshCellEvents() {
                                     console.warn("GetCellView from server occured in an error:", xhr);
                                     return;
                                 }
-                                cellModel = GetCellModel(partialCell.firstElementChild as HTMLButtonElement);
 
                                 //change class if it has no bombs around it and make it uninteractable
                                 if (cell.IsRevealed && cell.NeighboringBombs == 0) { affectedPartialCell.firstElementChild.className = "empty cell"; }
@@ -95,8 +96,8 @@ export function refreshCellEvents() {
                 });
             },
 
-            mouseenter: function () { toggleClassOnHover(cellModel, partialCell.parentElement.parentElement as HTMLDivElement, true); },
-            mouseleave: function () { toggleClassOnHover(cellModel, partialCell.parentElement.parentElement as HTMLDivElement, false); }
+            mouseenter: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild as HTMLButtonElement), true); },
+            mouseleave: function () { toggleClassOnHover(GetCellModel(partialCell.firstElementChild as HTMLButtonElement), false); }
         });
     });
 }

@@ -37,8 +37,8 @@ $(() => {
         inputs[i].setAttribute("size", inputs[i].getAttribute("placeholder").length.toString());
     }
     ;
-    $(".customSizeBtn").onclick = () => confirmCustomSize();
-    $(".customLifeBtn").onclick = () => confirmLifeAmount();
+    $(".customSizeBtn")[0].onclick = () => confirmCustomSize();
+    $(".customLifeBtn")[0].onclick = () => confirmLifeAmount();
 });
 function resetRound(sender, customColumn, customRow, customLifesCount) {
     $.get("/Game/GetCurrentState", function (currentState, status) {
@@ -113,10 +113,11 @@ export function refreshBoardStats() {
 export function refreshAfterFlagToggle(currentSetFlagCount) {
     _remainingFlagsStat.innerHTML = `<b>Remaining flags:</b><br>${_boardModel.BombsCount - currentSetFlagCount}/${_boardModel.BombsCount}`;
 }
-export function toggleClassOnHover(cellModel, boardView, isHovering) {
+export function toggleClassOnHover(cellModel, isHovering) {
     if (!cellModel.IsRevealed || cellModel.IsExploded) {
         return;
     }
+    let boardView = $("#board")[0];
     for (let col = cellModel.Column - 1; col < cellModel.Column + 2; col++) {
         if (col < 0 || col > _boardModel.Columns - 1) {
             continue;
