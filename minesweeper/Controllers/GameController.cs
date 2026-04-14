@@ -73,11 +73,6 @@ namespace minesweeper.Controllers
 			return PartialView("../_Cell", _board!.Cells[myColumn, myRow]);
 		}
 
-		public string GetCellModel(int myColumn, int myRow)
-		{
-			return JsonSerializer.Serialize(_board!.Cells[myColumn, myRow]);
-		}
-
 		/// <summary>
 		/// Performs a click on a cell with the given column and row.
 		/// </summary>
